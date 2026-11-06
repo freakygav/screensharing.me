@@ -6,6 +6,10 @@ import { getAuthorizedInvestigation } from "@/lib/investigations";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Serverless hosts (e.g. Vercel) cap function duration. Each stream ends itself before the cap and
+// the browser's EventSource reconnects with Last-Event-ID, so no update is lost.
+export const maxDuration = 300;
+const STREAM_LIFETIME_MS = Number(process.env.SSE_MAX_SECONDS ?? 240) * 1000;
 
 /**
  * Server-Sent Events stream of investigation updates.
@@ -43,7 +47,9 @@ export const GET = handler(async (req: Request, ctx: { params: Promise<{ id: str
 
       (async () => {
         let lastPing = Date.now();
+        const startedAt = Date.now();
         while (!closed) {
+          if (Date.now() - startedAt > STREAM_LIFETIME_MS) { cleanup(); break; }
           const events = await db.investigationEvent.findMany({
             where: { investigationId: id, id: { gt: lastId } },
             orderBy: { id: "asc" },

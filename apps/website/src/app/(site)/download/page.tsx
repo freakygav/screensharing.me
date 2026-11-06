@@ -24,8 +24,12 @@ function exeInfo() {
 }
 
 export default async function Download() {
-  const info = exeInfo();
+  const local = exeInfo();
   const latest = await db.applicationVersion.findFirst({ where: { active: true, channel: "stable" }, orderBy: { releasedAt: "desc" } });
+  // A file shipped with this server wins; otherwise use the release registered in Admin > App versions
+  // (e.g. hosted on blob storage/CDN when the host cannot serve large static files).
+  const remote = latest?.downloadUrl && /^https:\/\//.test(latest.downloadUrl) ? { href: latest.downloadUrl, sha: latest.sha256 } : null;
+  const info = local ? { href: "/download/screensharing.me.exe", sha: local.sha, size: local.size as number | null } : remote ? { ...remote, size: null } : null;
   return (
     <div className="relative">
       <div className="glow-top pointer-events-none absolute inset-x-0 top-0 h-80" />
@@ -35,10 +39,10 @@ export default async function Download() {
         <p className="mx-auto mt-3 max-w-lg text-muted">For Windows 10 and 11 (x64). Self-contained — no .NET installation required. Run it when an investigator gives you a PIN.</p>
         {info ? (
           <>
-            <a href="/download/screensharing.me.exe" download className="btn btn-primary mt-8 h-11 px-6"><IconDownload /> Download v{latest?.version ?? "1.0.0"} · {fmtBytes(info.size)}</a>
+            <a href={info.href} download className="btn btn-primary mt-8 h-11 px-6"><IconDownload /> Download v{latest?.version ?? "1.0.0"}{info.size ? ` · ${fmtBytes(info.size)}` : ""}</a>
             <div className="card-flat mx-auto mt-6 max-w-xl p-4 text-left">
               <div className="text-xs font-semibold uppercase tracking-wider text-dim">SHA-256</div>
-              <div className="mt-1 break-all font-mono text-[12.5px] text-ink-2">{info.sha}</div>
+              <div className="mt-1 break-all font-mono text-[12.5px] text-ink-2">{info.sha ?? "not registered"}</div>
               <div className="mt-3 text-xs text-dim">Verify with: <span className="font-mono">Get-FileHash .\screensharing.me.exe</span></div>
             </div>
           </>

@@ -17,3 +17,7 @@ artifacts/
 apps/website/public/download/*.exe
 apps/desktop/**/TestResults/
 apps/website/AGENTS.md
+
+.vercel
+.env*
+!.env.example
