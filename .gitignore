@@ -21,3 +21,4 @@ apps/website/AGENTS.md
 .vercel
 .env*
 !.env.example
+*.tsbuildinfo
