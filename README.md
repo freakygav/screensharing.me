@@ -8,6 +8,10 @@ hashed, explained evidence back in real time.
 * **Windows client** — .NET 10, WPF (MVVM, CommunityToolkit.Mvvm), SQLite (Microsoft.Data.Sqlite) + DPAPI, QuestPDF; single self-contained `screensharing.me.exe`.
 * **Scanner engine** — 9 collection modules (installations, mod archives, game-file integrity, game logs, JVM configuration, processes & memory, Prefetch/BAM, Recycle Bin/USN journal, anti-forensics), 110-rule catalog, five evidence tiers.
 
+**Live:** https://screensharing-me-azure.vercel.app · repository: https://github.com/freakygav/screensharing.me (private) ·
+hosted on Vercel (project `screensharing-me`, root directory `apps/website`, auto-deploys on every push to `main`) with
+Neon PostgreSQL (Vercel Marketplace) and the client EXE on Vercel Blob. Preview deployments currently share the production database.
+
 Desktop screenshots (rendered from the real views with real scan data): [`documentation/screenshots/desktop`](documentation/screenshots/desktop).
 
 ## Repository layout
