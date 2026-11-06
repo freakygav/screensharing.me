@@ -12,6 +12,8 @@ import { createHash, randomBytes } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+// Version the test client announces; must be a supported release (older versions are blocked with 426).
+const CLIENT_VERSION = process.env.SSME_CLIENT_VERSION ?? "1.1.0";
 const BASE = process.env.SSME_BASE_URL ?? "http://localhost:3000";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const websiteDir = path.resolve(here, "../../apps/website");
@@ -129,7 +131,7 @@ test("administrator authentication", { skip: !ADMIN.password && "set SSME_ADMIN_
   const r = await admin.req("POST", "/api/auth/login", { ...ADMIN, adminOnly: true });
   assert.equal(r.status, 200);
   assert.equal(r.data.user.role, "ADMIN");
-  const d = await device("POST", "/api/desktop/auth/login", null, { ...ADMIN, appVersion: "1.0.0", adminOnly: true });
+  const d = await device("POST", "/api/desktop/auth/login", null, { ...ADMIN, appVersion: CLIENT_VERSION, adminOnly: true });
   assert.equal(d.status, 200, "desktop admin login");
   const list = await device("GET", "/api/desktop/staff/investigations", d.data.token);
   assert.equal(list.status, 200);
@@ -158,23 +160,23 @@ test("authorization: other users cannot see the investigation", async () => {
 
 test("wrong PIN rejected; malformed PIN rejected", async () => {
   const bad = pin === "000-000" ? "000-001" : "000-000";
-  let r = await device("POST", "/api/desktop/pin/claim", null, { pin: bad, appVersion: "1.0.0" });
+  let r = await device("POST", "/api/desktop/pin/claim", null, { pin: bad, appVersion: CLIENT_VERSION });
   assert.equal(r.status, 404);
-  r = await device("POST", "/api/desktop/pin/claim", null, { pin: "abc", appVersion: "1.0.0" });
+  r = await device("POST", "/api/desktop/pin/claim", null, { pin: "abc", appVersion: CLIENT_VERSION });
   assert.equal(r.status, 404);
 });
 
 test("desktop connection: PIN claim is single-use", async () => {
-  const r = await device("POST", "/api/desktop/pin/claim", null, { pin, appVersion: "1.0.0", osVersion: "Windows 11 (test)", elevated: false });
+  const r = await device("POST", "/api/desktop/pin/claim", null, { pin, appVersion: CLIENT_VERSION, osVersion: "Windows 11 (test)", elevated: false });
   assert.equal(r.status, 200, JSON.stringify(r.data));
   assert.equal(r.data.investigation.subjectName, "TestPlayer");
   deviceToken = r.data.deviceToken;
-  const again = await device("POST", "/api/desktop/pin/claim", null, { pin, appVersion: "1.0.0" });
+  const again = await device("POST", "/api/desktop/pin/claim", null, { pin, appVersion: CLIENT_VERSION });
   assert.equal(again.status, 404, "used PIN cannot be claimed again");
   const snap = await alice.req("GET", `/api/investigations/${investigationId}`);
   assert.equal(snap.data.status, "CONNECTED");
   assert.equal(snap.data.pin, null, "PIN no longer displayed after claim");
-  assert.equal(snap.data.device.appVersion, "1.0.0");
+  assert.equal(snap.data.device.appVersion, CLIENT_VERSION);
 });
 
 test("scan cannot start before consent; invalid token rejected", async () => {
@@ -287,27 +289,27 @@ test("administrator can inspect any investigation (audited)", { skip: !ADMIN.pas
 test("PIN expiration", async () => {
   const r = await alice.req("POST", "/api/investigations", { subjectName: "ExpiryPlayer" });
   await db.investigationPin.update({ where: { investigationId: r.data.id }, data: { expiresAt: new Date(Date.now() - 1000) } });
-  const claim = await device("POST", "/api/desktop/pin/claim", null, { pin: r.data.pin, appVersion: "1.0.0" });
+  const claim = await device("POST", "/api/desktop/pin/claim", null, { pin: r.data.pin, appVersion: CLIENT_VERSION });
   assert.equal(claim.status, 404, "expired PIN cannot be claimed");
   const snap = await alice.req("GET", `/api/investigations/${r.data.id}`);
   assert.equal(snap.data.status, "EXPIRED");
   const regen = await alice.req("POST", `/api/investigations/${r.data.id}/pin`, {});
   assert.equal(regen.status, 200);
   assert.notEqual(regen.data.pin, undefined);
-  const claim2 = await device("POST", "/api/desktop/pin/claim", null, { pin: regen.data.pin, appVersion: "1.0.0" });
+  const claim2 = await device("POST", "/api/desktop/pin/claim", null, { pin: regen.data.pin, appVersion: CLIENT_VERSION });
   assert.equal(claim2.status, 200, "regenerated PIN works");
 });
 
 test("connection interruption: offline device can be replaced by a new PIN", async () => {
   const r = await alice.req("POST", "/api/investigations", { subjectName: "DropPlayer" });
-  const c = await device("POST", "/api/desktop/pin/claim", null, { pin: r.data.pin, appVersion: "1.0.0" });
+  const c = await device("POST", "/api/desktop/pin/claim", null, { pin: r.data.pin, appVersion: CLIENT_VERSION });
   const tok = c.data.deviceToken;
   assert.equal((await alice.req("POST", `/api/investigations/${r.data.id}/pin`, {})).status, 409, "cannot re-issue while desktop online");
   await db.connectedDevice.updateMany({ where: { investigationId: r.data.id }, data: { lastHeartbeatAt: new Date(Date.now() - 120_000) } });
   const re = await alice.req("POST", `/api/investigations/${r.data.id}/pin`, {});
   assert.equal(re.status, 200, "re-issue allowed once desktop is offline");
   assert.equal((await device("POST", "/api/desktop/heartbeat", tok, {})).status, 401, "old device token revoked");
-  const c2 = await device("POST", "/api/desktop/pin/claim", null, { pin: re.data.pin, appVersion: "1.0.0" });
+  const c2 = await device("POST", "/api/desktop/pin/claim", null, { pin: re.data.pin, appVersion: CLIENT_VERSION });
   assert.equal(c2.status, 200);
   const sess = await device("GET", "/api/desktop/session", c2.data.deviceToken);
   assert.equal(sess.data.investigation.status, "CONNECTED");
@@ -321,7 +323,7 @@ test("blocked application versions are refused", async () => {
 test("PIN brute-force protection (per-IP limit)", async () => {
   await db.rateLimitBucket.deleteMany({});
   let last;
-  for (let i = 0; i < 11; i++) last = await device("POST", "/api/desktop/pin/claim", null, { pin: String(100000 + i), appVersion: "1.0.0" });
+  for (let i = 0; i < 11; i++) last = await device("POST", "/api/desktop/pin/claim", null, { pin: String(100000 + i), appVersion: CLIENT_VERSION });
   assert.equal(last.status, 429);
   await db.rateLimitBucket.deleteMany({});
 });
