@@ -38,7 +38,7 @@ export default async function AdminOverview() {
                 return (
                   <div key={s}>
                     <div className="flex justify-between text-[12.5px]"><span className="text-muted">{s}</span><span className="tabular-nums">{n}</span></div>
-                    <div className="mt-1 h-1.5 rounded-full bg-[#151925]"><div className={`h-full rounded-full ${SEV_DOT[s]}`} style={{ width: `${(n / totalSev) * 100}%` }} /></div>
+                    <div className="mt-1 h-1.5 rounded-full bg-panel-2"><div className={`h-full rounded-full ${SEV_DOT[s]}`} style={{ width: `${(n / totalSev) * 100}%` }} /></div>
                   </div>
                 );
               })}

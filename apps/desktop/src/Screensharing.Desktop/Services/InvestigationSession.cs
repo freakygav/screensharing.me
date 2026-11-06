@@ -22,6 +22,7 @@ public sealed class InvestigationSession
     private ScanProgress? _latestProgress;
     private int _sentProgress = -1;
     private string? _sentActivity;
+    private int _sentExamined = -1;
     private DateTime _lastProgressPost = DateTime.MinValue;
     private DateTime _lastHeartbeat = DateTime.MinValue;
 
@@ -67,6 +68,7 @@ public sealed class InvestigationSession
             rulesetVersion = options.Rules.Version.Length > 40 ? options.Rules.Version[..40] : options.Rules.Version,
             elevated = ScanEngine.IsElevated(),
             categories = engine.Categories.Select(c => new { key = c.Key, name = c.Name }).ToList(),
+            instance = Payloads.Instance(options.Target),
         }, ct), ct, attempts: 5);
 
         engine.Progress += p => { _latestProgress = p; Progress?.Invoke(p); };
@@ -185,11 +187,12 @@ public sealed class InvestigationSession
     {
         var p = _latestProgress;
         if (p is null) return;
-        var changed = p.Percent != _sentProgress || p.Activity != _sentActivity;
+        var changed = p.Percent != _sentProgress || p.Activity != _sentActivity || p.FilesExamined != _sentExamined;
         if (!force && (!changed || DateTime.UtcNow - _lastProgressPost < TimeSpan.FromSeconds(1))) return;
         await _api.ProgressAsync(Payloads.Progress(p), ct);
         _sentProgress = p.Percent;
         _sentActivity = p.Activity;
+        _sentExamined = p.FilesExamined;
         _lastProgressPost = DateTime.UtcNow;
         _lastHeartbeat = DateTime.UtcNow;
     }

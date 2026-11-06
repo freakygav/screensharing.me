@@ -107,8 +107,7 @@ public class EndToEndTests(ITestOutputHelper output)
 
     private static ScanOptions Options(FixtureBuilder fx, RuleSet rules) => new()
     {
-        Rules = rules, AppDataOverride = fx.AppData, UserProfileOverride = fx.UserProfile,
-        IncludeSystemArtifacts = false, ModrinthLookup = false, MemoryScan = false,
+        Rules = rules, Target = fx.Target(), ModrinthLookup = false, MemoryScan = false,
     };
 
     [E2EFact]
@@ -154,8 +153,15 @@ public class EndToEndTests(ITestOutputHelper output)
         Assert.Equal(100, root.GetProperty("scan").GetProperty("progress").GetInt32());
         Assert.Equal("confirmed", root.GetProperty("verdict").GetProperty("level").GetString());
         var categories = root.GetProperty("scan").GetProperty("categories").EnumerateArray().ToList();
-        Assert.Equal(9, categories.Count);
-        Assert.Contains(categories, c => c.GetProperty("key").GetString() == "processes" && c.GetProperty("status").GetString() == "SKIPPED");
+        Assert.Equal(8, categories.Count);
+        Assert.Contains(categories, c => c.GetProperty("key").GetString() == "process" && c.GetProperty("status").GetString() == "SKIPPED");
+        var summary = root.GetProperty("scan").GetProperty("summary");
+        Assert.Equal("Selected PvP", summary.GetProperty("instance").GetProperty("name").GetString());
+        Assert.True(summary.GetProperty("inspection").GetProperty("analyzed").GetInt32() > 0);
+        var meteorRow = root.GetProperty("detections").EnumerateArray().First(d => d.GetProperty("family").GetString() == "Meteor Client");
+        Assert.Equal("CONFIRMED", meteorRow.GetProperty("outcome").GetString());
+        Assert.Equal("mods/meteor-client-0.5.8.jar", meteorRow.GetProperty("location").GetString());
+        Assert.Contains("meteor-client", meteorRow.GetProperty("signature").GetString());
         var meteor = root.GetProperty("detections").EnumerateArray().First(d => d.GetProperty("name").GetString()!.StartsWith("Meteor Client"));
         Assert.Matches("^[0-9a-f]{64}$", meteor.GetProperty("evidence")[0].GetProperty("sha256").GetString()!);
 
@@ -168,7 +174,9 @@ public class EndToEndTests(ITestOutputHelper output)
         using var reportDoc = await staff.StaffReportAsync(id);
         var report = ReportModel.FromServer(reportDoc.RootElement);
         Assert.Equal(result.Findings.Count, report.Findings.Count);
-        Assert.Equal(9, report.Coverage.Count);
+        Assert.Equal(8, report.Coverage.Count);
+        Assert.Equal("Selected PvP", report.InstanceName);
+        Assert.Contains(report.Findings, f => f.Family == "Meteor Client" && f.Location == "mods/meteor-client-0.5.8.jar" && f.Outcome == "CONFIRMED");
 
         // Exports from the desktop
         var dir = Directory.CreateTempSubdirectory("ssme-export").FullName;
@@ -213,9 +221,9 @@ public class EndToEndTests(ITestOutputHelper output)
         output.WriteLine($"{flaky.Failed} requests failed; states: {string.Join(",", states)}");
     }
 
-    /// <summary>Full system scan of this machine uploaded to the local server (opt-in: SSME_E2E_FULL=1).</summary>
+    /// <summary>Scan of the Minecraft instance running on this machine, uploaded to the server (opt-in: SSME_E2E_FULL=1).</summary>
     [FullScanFact]
-    public async Task Full_system_scan_uploads_and_validates()
+    public async Task Running_instance_scan_uploads_and_validates()
     {
         var investigator = new Investigator();
         await investigator.RegisterAsync();
@@ -228,11 +236,14 @@ public class EndToEndTests(ITestOutputHelper output)
         var rules = await session.LoadRulesAsync(CancellationToken.None);
         var http = new HttpClient();
         http.DefaultRequestHeaders.UserAgent.ParseAdd("screensharing.me-tests/1.0");
-        var result = await session.RunAsync(new ScanOptions { Rules = rules, Http = http, MemoryScanCapBytes = 1L << 30 }, CancellationToken.None);
+        var target = Screensharing.Scanner.Instance.InstanceResolver.Detect().FirstOrDefault(i => i.Resolved);
+        Assert.NotNull(target); // start Minecraft before running this test
+        var result = await session.RunAsync(new ScanOptions { Rules = rules, Target = target, Http = http, MemoryScanCapBytes = 1L << 30 }, CancellationToken.None);
+        Assert.Empty(result.ScopeViolations);
         Assert.Null(session.UploadError);
         Assert.True(session.ManifestVerified);
         using var snap = await investigator.SnapshotAsync(id);
         Assert.Equal(result.Findings.Count, snap.RootElement.GetProperty("counts").GetProperty("total").GetInt32());
-        output.WriteLine($"Full scan {claim.Investigation.Reference} ({id}): {result.Findings.Count} findings, {result.Mods.Count} mods, elevated={result.Elevated}");
+        output.WriteLine($"Instance scan {claim.Investigation.Reference} ({id}) of {target.Name} ({target.Launcher}): {result.Findings.Count} findings, {result.Mods.Count} archives, {result.Inspection["examined"]} files examined, {result.Statistics["durationSeconds"]}s");
     }
 }

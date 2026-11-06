@@ -1,0 +1,182 @@
+{
+  "title": "Cheat client string signatures",
+  "note": "Literal strings that identify open-source cheat clients, verified in their source. `scopes`: class = UTF-8 constants of compiled classes, resource = text files inside archives, log = game logs and crash reports (chat lines excluded), config = instance configuration files.",
+  "defaults": {
+    "kind": "STRING",
+    "category": "Cheat client",
+    "severity": "CRITICAL"
+  },
+  "rules": [
+    {
+      "id": "SSME-ST-0001",
+      "name": "Meteor Client mixin configuration",
+      "pattern": "meteor-client.mixins.json",
+      "family": "Meteor Client",
+      "scopes": [
+        "resource",
+        "log"
+      ],
+      "tier": "STRONG_INDICATOR",
+      "confidence": 88,
+      "weight": 60,
+      "description": "The mixin configuration name of Meteor Client was found. Mod metadata and the mixin subsystem reference it whenever the client is packaged or loaded.",
+      "falsePositives": "Very low. A Meteor addon does not ship Meteor's own mixin configuration.",
+      "limitations": "Renamed forks change the configuration name.",
+      "references": [
+        "https://github.com/MeteorDevelopment/meteor-client/blob/master/src/main/resources/fabric.mod.json"
+      ]
+    },
+    {
+      "id": "SSME-ST-0002",
+      "name": "Wurst Client mixin configuration",
+      "pattern": "wurst.mixins.json",
+      "family": "Wurst Client",
+      "scopes": [
+        "resource",
+        "log"
+      ],
+      "tier": "STRONG_INDICATOR",
+      "confidence": 88,
+      "weight": 60,
+      "description": "The mixin configuration name of Wurst Client was found.",
+      "falsePositives": "Very low.",
+      "limitations": "Renamed forks change the configuration name.",
+      "references": [
+        "https://github.com/Wurst-Imperium/Wurst7/blob/master/src/main/resources/fabric.mod.json"
+      ]
+    },
+    {
+      "id": "SSME-ST-0003",
+      "name": "LiquidBounce mixin configuration",
+      "pattern": "liquidbounce.mixins.json",
+      "family": "LiquidBounce",
+      "scopes": [
+        "resource",
+        "log"
+      ],
+      "tier": "STRONG_INDICATOR",
+      "confidence": 88,
+      "weight": 60,
+      "description": "The mixin configuration name of LiquidBounce was found.",
+      "falsePositives": "Very low.",
+      "limitations": "Renamed forks change the configuration name.",
+      "references": [
+        "https://github.com/CCBlueX/LiquidBounce/blob/nextgen/src/main/resources/fabric.mod.json"
+      ]
+    },
+    {
+      "id": "SSME-ST-0010",
+      "name": "Meteor Client code in a log or stack trace",
+      "pattern": "meteordevelopment.meteorclient.",
+      "family": "Meteor Client",
+      "scopes": [
+        "log",
+        "config"
+      ],
+      "tier": "STRONG_INDICATOR",
+      "confidence": 88,
+      "weight": 60,
+      "description": "An instance log or crash report (chat lines excluded) or a configuration file names a Meteor Client class (typically a stack trace), which is only written when the client's code was running in the game.",
+      "falsePositives": "Low. Chat lines are excluded, so players typing the name does not match.",
+      "limitations": "Logs are rotated; only logs still present in the instance are examined.",
+      "references": [
+        "https://github.com/MeteorDevelopment/meteor-client"
+      ]
+    },
+    {
+      "id": "SSME-ST-0011",
+      "name": "Wurst Client code in a log or stack trace",
+      "pattern": "net.wurstclient.",
+      "family": "Wurst Client",
+      "scopes": [
+        "log",
+        "config"
+      ],
+      "tier": "STRONG_INDICATOR",
+      "confidence": 88,
+      "weight": 60,
+      "description": "An instance log or crash report (chat lines excluded) or a configuration file names a Wurst Client class, which is only written when the client's code was running.",
+      "falsePositives": "Low. Chat lines are excluded.",
+      "limitations": "Only logs still present in the instance are examined.",
+      "references": [
+        "https://github.com/Wurst-Imperium/Wurst7"
+      ]
+    },
+    {
+      "id": "SSME-ST-0012",
+      "name": "LiquidBounce code in a log or stack trace",
+      "pattern": "net.ccbluex.liquidbounce.",
+      "family": "LiquidBounce",
+      "scopes": [
+        "log",
+        "config"
+      ],
+      "tier": "STRONG_INDICATOR",
+      "confidence": 88,
+      "weight": 60,
+      "description": "An instance log or crash report (chat lines excluded) or a configuration file names a LiquidBounce class.",
+      "falsePositives": "Low. Chat lines are excluded.",
+      "limitations": "Only logs still present in the instance are examined.",
+      "references": [
+        "https://github.com/CCBlueX/LiquidBounce"
+      ]
+    },
+    {
+      "id": "SSME-ST-0013",
+      "name": "BleachHack code in a log or stack trace",
+      "pattern": "org.bleachhack.",
+      "family": "BleachHack",
+      "scopes": [
+        "log",
+        "config"
+      ],
+      "tier": "STRONG_INDICATOR",
+      "confidence": 85,
+      "weight": 60,
+      "description": "An instance log or crash report (chat lines excluded) or a configuration file names a BleachHack class.",
+      "falsePositives": "Low. Chat lines are excluded.",
+      "limitations": "Only logs still present in the instance are examined.",
+      "references": [
+        "https://github.com/BleachDev/BleachHack"
+      ]
+    },
+    {
+      "id": "SSME-ST-0014",
+      "name": "Meteor Rejects code in a log or stack trace",
+      "pattern": "anticope.rejects.",
+      "family": "Meteor Rejects (Meteor addon)",
+      "scopes": [
+        "log",
+        "config"
+      ],
+      "tier": "STRONG_INDICATOR",
+      "confidence": 85,
+      "weight": 60,
+      "description": "An instance log or crash report (chat lines excluded) or a configuration file names a Meteor Rejects class.",
+      "falsePositives": "Low. Chat lines are excluded.",
+      "limitations": "Only logs still present in the instance are examined.",
+      "references": [
+        "https://github.com/AntiCope/meteor-rejects"
+      ]
+    },
+    {
+      "id": "SSME-ST-0015",
+      "name": "Meteor Client classes referenced by another archive",
+      "pattern": "meteordevelopment/meteorclient/",
+      "family": "Meteor Client",
+      "scopes": [
+        "class"
+      ],
+      "tier": "WEAK_INDICATOR",
+      "confidence": 50,
+      "weight": 35,
+      "severity": "MEDIUM",
+      "description": "Compiled classes reference Meteor Client's API, i.e. the archive is a Meteor addon (it needs Meteor Client installed to work). Addons add further cheat modules to Meteor.",
+      "falsePositives": "Addons may be cosmetic; review the addon's feature classes.",
+      "limitations": "An addon alone does nothing without Meteor Client; check for the client itself.",
+      "references": [
+        "https://github.com/MeteorDevelopment/meteor-addon-template"
+      ]
+    }
+  ]
+}

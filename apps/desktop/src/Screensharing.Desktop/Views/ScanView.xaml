@@ -1,68 +1,104 @@
 <UserControl x:Class="Screensharing.Desktop.Views.ScanView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid Margin="40,30" MaxWidth="980">
-        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-        <StackPanel HorizontalAlignment="Center">
-            <TextBlock Text="SCREENSHARING.ME" Style="{StaticResource Eyebrow}" HorizontalAlignment="Center"/>
-            <TextBlock Text="INVESTIGATION IN PROGRESS" Style="{StaticResource H1}" FontSize="24" HorizontalAlignment="Center" Margin="0,6,0,0"/>
-            <TextBlock Style="{StaticResource MutedText}" HorizontalAlignment="Center" Margin="0,4,0,0">
-                <Run Text="{Binding Investigation.Reference, Mode=OneWay}" FontFamily="{StaticResource Mono}"/><Run Text=" · requested by "/><Run Text="{Binding Investigation.RequestedBy, Mode=OneWay}"/>
-            </TextBlock>
-        </StackPanel>
+    <Grid Margin="36,26,36,22" MaxWidth="1080">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
 
-        <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,24,0,0" Padding="26,22">
+        <!-- Header: what is being examined -->
+        <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="SCANNING INSTANCE" Style="{StaticResource Eyebrow}"/>
+                <TextBlock Text="{Binding Instance.Name}" Style="{StaticResource H1}" Margin="0,4,0,0" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="{Binding InstanceDetail}" Style="{StaticResource MutedText}" Margin="0,2,0,0"/>
+                <TextBlock Text="{Binding Instance.GameDirectory}" Style="{StaticResource MonoText}" FontSize="11.5" Margin="0,4,0,0" Foreground="{StaticResource Ink2}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" VerticalAlignment="Bottom" HorizontalAlignment="Right">
+                <TextBlock HorizontalAlignment="Right" FontSize="12" Foreground="{StaticResource Dim}"><Run Text="{Binding Investigation.Reference, Mode=OneWay}" FontFamily="{StaticResource Mono}"/></TextBlock>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">
+                    <Ellipse Width="7" Height="7" Fill="{Binding LinkState, Converter={StaticResource Tone}}" Margin="0,0,7,0"/>
+                    <TextBlock Text="{Binding LinkText}" Foreground="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" MaxWidth="300"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+
+        <!-- Progress -->
+        <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,20,0,0" Padding="22,18">
             <StackPanel>
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{Binding Activity}" FontSize="15" Foreground="{StaticResource Ink}" TextTrimming="CharacterEllipsis"/>
-                        <TextBlock Text="{Binding Units}" FontSize="12" Foreground="{StaticResource Dim}" Margin="0,4,0,0"/>
+                    <StackPanel VerticalAlignment="Bottom">
+                        <TextBlock Text="{Binding Stage}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}"/>
+                        <TextBlock Text="{Binding Activity}" FontSize="14" Foreground="{StaticResource Ink}" TextTrimming="CharacterEllipsis" Margin="0,3,0,0"/>
                     </StackPanel>
-                    <TextBlock Grid.Column="1" FontSize="40" FontWeight="Bold" FontFamily="{StaticResource Display}" Foreground="{StaticResource Ink}">
-                        <Run Text="{Binding Percent, Mode=OneWay}"/><Run Text="%" FontSize="22" Foreground="{StaticResource Muted}"/>
+                    <TextBlock Grid.Column="1" FontSize="30" FontWeight="SemiBold" FontFamily="{StaticResource Display}" Foreground="{StaticResource Ink}">
+                        <Run Text="{Binding Percent, Mode=OneWay}"/><Run Text="%" FontSize="17" Foreground="{StaticResource Muted}"/>
                     </TextBlock>
                 </Grid>
-                <ProgressBar Style="{StaticResource Progress}" Value="{Binding Percent, Mode=OneWay}" Maximum="100" Margin="0,16,0,0" Height="10"/>
-                <Grid Margin="0,18,0,0">
-                    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
-                    <StackPanel><TextBlock Text="Findings" Foreground="{StaticResource Dim}" FontSize="12"/><TextBlock Text="{Binding Findings}" FontSize="20" FontWeight="Bold"/></StackPanel>
-                    <StackPanel Grid.Column="1"><TextBlock Text="Critical" Foreground="{StaticResource Dim}" FontSize="12"/><TextBlock Text="{Binding Critical}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Crit}"/></StackPanel>
-                    <StackPanel Grid.Column="2"><TextBlock Text="High" Foreground="{StaticResource Dim}" FontSize="12"/><TextBlock Text="{Binding High}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource High}"/></StackPanel>
-                    <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Ellipse Width="8" Height="8" Fill="{Binding LinkState, Converter={StaticResource Tone}}" Margin="0,0,8,0"/>
-                        <TextBlock Text="{Binding LinkText}" Foreground="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" MaxWidth="320"/>
-                    </StackPanel>
-                </Grid>
+                <ProgressBar Style="{StaticResource Progress}" Value="{Binding Percent, Mode=OneWay}" Maximum="100" Margin="0,12,0,0"/>
             </StackPanel>
         </Border>
 
-        <ScrollViewer Grid.Row="2" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding Categories}">
-                <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="2"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border Style="{StaticResource Inset}" Margin="0,0,10,10" Padding="14,11">
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition/></Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource Icon}" Text="{Binding Status, Converter={StaticResource StatusGlyph}}" Foreground="{Binding Status, Converter={StaticResource Tone}}" FontSize="13"/>
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="{Binding Name}" FontSize="13" Foreground="{StaticResource Ink}"/>
-                                    <TextBlock Text="{Binding Detail}" FontSize="11.5" Foreground="{StaticResource Dim}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+        <!-- Counters -->
+        <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="0">
+            <UniformGrid Columns="7">
+                <UniformGrid.Resources>
+                    <Style TargetType="Border" x:Key="Cell"><Setter Property="Padding" Value="16,11"/><Setter Property="BorderBrush" Value="{StaticResource Line}"/><Setter Property="BorderThickness" Value="0,0,1,0"/></Style>
+                    <Style TargetType="TextBlock" x:Key="Lbl"><Setter Property="FontSize" Value="11.5"/><Setter Property="Foreground" Value="{StaticResource Muted}"/></Style>
+                    <Style TargetType="TextBlock" x:Key="Val"><Setter Property="FontSize" Value="18"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Foreground" Value="{StaticResource Ink}"/><Setter Property="Margin" Value="0,2,0,0"/></Style>
+                </UniformGrid.Resources>
+                <Border Style="{StaticResource Cell}"><StackPanel><TextBlock Text="Files examined" Style="{StaticResource Lbl}"/><TextBlock Text="{Binding FilesExamined, StringFormat=N0}" Style="{StaticResource Val}"/></StackPanel></Border>
+                <Border Style="{StaticResource Cell}"><StackPanel><TextBlock Text="Analysed" Style="{StaticResource Lbl}"/><TextBlock Text="{Binding FilesAnalyzed, StringFormat=N0}" Style="{StaticResource Val}"/></StackPanel></Border>
+                <Border Style="{StaticResource Cell}"><StackPanel><TextBlock Text="Skipped" Style="{StaticResource Lbl}"/><TextBlock Text="{Binding FilesSkipped, StringFormat=N0}" Style="{StaticResource Val}"/></StackPanel></Border>
+                <Border Style="{StaticResource Cell}"><StackPanel><TextBlock Text="Not inspectable" Style="{StaticResource Lbl}"/><TextBlock Text="{Binding UnableToInspect, StringFormat=N0}" Style="{StaticResource Val}"/></StackPanel></Border>
+                <Border Style="{StaticResource Cell}"><StackPanel><TextBlock Text="Findings" Style="{StaticResource Lbl}"/><TextBlock Text="{Binding Findings}" Style="{StaticResource Val}"/></StackPanel></Border>
+                <Border Style="{StaticResource Cell}"><StackPanel><TextBlock Text="Confirmed" Style="{StaticResource Lbl}"/><TextBlock Text="{Binding Confirmed}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource Val}">
+                            <Setter Property="Foreground" Value="{StaticResource Crit}"/>
+                            <Style.Triggers><DataTrigger Binding="{Binding Confirmed}" Value="0"><Setter Property="Foreground" Value="{StaticResource Ink}"/></DataTrigger></Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock></StackPanel></Border>
+                <Border Style="{StaticResource Cell}" BorderThickness="0"><StackPanel><TextBlock Text="Duration" Style="{StaticResource Lbl}"/><TextBlock Text="{Binding Elapsed}" Style="{StaticResource Val}" FontFamily="{StaticResource Mono}" FontSize="17"/></StackPanel></Border>
+            </UniformGrid>
+        </Border>
 
-        <Grid Grid.Row="3" Margin="0,8,0,0">
-            <Border CornerRadius="10" Padding="12,9" Background="{StaticResource CritSoft}" BorderBrush="#59FF4D6A" BorderThickness="1" HorizontalAlignment="Left" Visibility="{Binding Error, Converter={StaticResource NullToVis}}">
-                <TextBlock Text="{Binding Error}" Foreground="#FFD4DC" FontSize="12.5" TextWrapping="Wrap"/>
-            </Border>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Style="{StaticResource BtnSmall}" Content="Cancel investigation" Command="{Binding CancelCommand}" Visibility="{Binding Running, Converter={StaticResource BoolToVis}}"/>
+        <!-- Stages -->
+        <Border Grid.Row="3" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Categories}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="16,10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="240"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Style="{StaticResource Icon}" Text="{Binding Status, Converter={StaticResource StatusGlyph}}" Foreground="{Binding Status, Converter={StaticResource Tone}}" FontSize="12"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="13" Foreground="{StaticResource Ink}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding Detail}" FontSize="12" Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="3" Text="{Binding Status}" FontSize="10.5" FontWeight="SemiBold" Foreground="{Binding Status, Converter={StaticResource Tone}}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <Grid Grid.Row="4" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel>
+                <Border CornerRadius="6" Padding="12,9" Background="{StaticResource CritSoft}" BorderBrush="#59E5484D" BorderThickness="1" HorizontalAlignment="Left" Visibility="{Binding Error, Converter={StaticResource NullToVis}}">
+                    <TextBlock Text="{Binding Error}" Foreground="#F6C3C5" FontSize="12.5" TextWrapping="Wrap"/>
+                </Border>
+                <Border Style="{StaticResource Inset}" HorizontalAlignment="Left" Visibility="{Binding Notice, Converter={StaticResource NullToVis}}">
+                    <TextBlock Text="{Binding Notice}" Style="{StaticResource Body}" FontSize="12.5"/>
+                </Border>
+                <TextBlock Style="{StaticResource MutedText}" FontSize="11.5" Visibility="{Binding Running, Converter={StaticResource BoolToVis}}"
+                           Text="Read-only. Only the instance above is examined. You can keep playing; closing the game ends live process evidence."/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                <Button Style="{StaticResource BtnDanger}" Content="Cancel scan" Command="{Binding CancelCommand}" Visibility="{Binding Running, Converter={StaticResource BoolToVis}}"/>
                 <Button Style="{StaticResource BtnSmall}" Content="Close" Command="{Binding CloseCommand}" Visibility="{Binding Running, Converter={StaticResource NotBoolToVis}}"/>
             </StackPanel>
         </Grid>

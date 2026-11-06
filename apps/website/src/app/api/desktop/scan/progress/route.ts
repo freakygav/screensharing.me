@@ -30,10 +30,14 @@ export const POST = handler(async (req: Request) => {
     }
     await tx.scan.update({
       where: { id: scan.id },
-      data: { progress: Math.max(scan.progress, body.progress), currentActivity: body.currentActivity ?? null, lastUpdateAt: now, status: "RUNNING" },
+      data: {
+        progress: Math.max(scan.progress, body.progress), currentActivity: body.currentActivity ?? null, lastUpdateAt: now, status: "RUNNING",
+        // Live counters are kept next to the selected instance until the final summary replaces them.
+        ...(body.files ? { summary: { ...((scan.summary as Record<string, unknown> | null) ?? {}), live: body.files } } : {}),
+      },
     });
     await tx.connectedDevice.update({ where: { id: device.id }, data: { lastHeartbeatAt: now } });
-    await publish(device.investigationId, "scan.progress", { progress: Math.max(scan.progress, body.progress), activity: body.currentActivity ?? null }, tx);
+    await publish(device.investigationId, "scan.progress", { progress: Math.max(scan.progress, body.progress), activity: body.currentActivity ?? null, files: body.files ?? null }, tx);
   });
   return json({ ok: true });
 });

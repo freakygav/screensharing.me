@@ -12,8 +12,8 @@
             </StackPanel>
             <Border Style="{StaticResource Card}" Margin="0,24,0,0" Padding="22">
                 <StackPanel>
-                    <Border Margin="0,0,0,14" CornerRadius="10" Padding="12,9" Background="{StaticResource CritSoft}" BorderBrush="#59FF4D6A" BorderThickness="1" Visibility="{Binding Error, Converter={StaticResource NullToVis}}">
-                        <TextBlock Text="{Binding Error}" Foreground="#FFD4DC" FontSize="12.5" TextWrapping="Wrap"/>
+                    <Border Margin="0,0,0,14" CornerRadius="6" Padding="12,9" Background="{StaticResource CritSoft}" BorderBrush="#59E5484D" BorderThickness="1" Visibility="{Binding Error, Converter={StaticResource NullToVis}}">
+                        <TextBlock Text="{Binding Error}" Foreground="#F6C3C5" FontSize="12.5" TextWrapping="Wrap"/>
                     </Border>
                     <TextBlock Text="Username or email" FontSize="12.5" FontWeight="SemiBold" Foreground="{StaticResource Ink2}" Margin="0,0,0,6"/>
                     <TextBox x:Name="Id" Text="{Binding Identifier, UpdateSourceTrigger=PropertyChanged}"/>

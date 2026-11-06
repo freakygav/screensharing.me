@@ -22,14 +22,16 @@ public static class ReportExporter
         var doc = new
         {
             format = "screensharing.me/report",
-            formatVersion = 1,
+            formatVersion = 2,
             generatedAt = DateTimeOffset.UtcNow,
             source = r.Source,
             investigation = new { id = r.InvestigationId, reference = r.Reference, subject = r.Subject, server = r.Server, requestedBy = r.RequestedBy },
             scan = new { r.StartedAt, r.CompletedAt, r.EngineVersion, r.RulesetVersion, r.Elevated, r.ManifestSha256, r.ManifestVerified },
             verdict = new { title = r.Verdict().Title, explanation = r.Verdict().Explanation },
             counts = new { total = r.Findings.Count, critical = r.Count("CRITICAL"), high = r.Count("HIGH"), medium = r.Count("MEDIUM"), low = r.Count("LOW"), info = r.Count("INFO") },
-            findings = r.Findings,
+            instance = r.Instance,
+            inspection = new { examined = r.FilesExamined, analyzed = r.FilesAnalyzed, skipped = r.FilesSkipped, unableToInspect = r.FilesUnableToInspect, signatures = r.Signatures, uninspected = r.Uninspected, excluded = r.Excluded },
+            findings = r.Findings.Select(f => new { f.Id, f.RuleId, f.Name, suspectedClient = f.Family, f.Category, f.Location, f.Signature, status = f.OutcomeLabel, requiresManualReview = f.NeedsReview, f.Severity, f.Tier, f.Confidence, f.Description, f.Method, f.WhyItMatters, f.Limitations, f.FalsePositiveNotes, f.AlternativeExplanations, f.DetectedAt, f.Evidence }),
             coverage = r.Coverage,
             installations = r.Installations,
             mods = r.Mods,
@@ -48,16 +50,16 @@ public static class ReportExporter
     public static void Csv(ReportModel r, string path)
     {
         var sb = new StringBuilder();
-        sb.AppendLine(string.Join(",", "investigation_reference", "investigation_id", "subject", "finding_id", "rule_id", "name", "category", "severity", "evidence_tier", "confidence", "detected_at", "evidence_kind", "evidence_source", "evidence_reference", "sha256", "size_bytes", "file_created", "file_modified", "observed_at", "method", "why_it_matters", "limitations"));
+        sb.AppendLine(string.Join(",", "investigation_reference", "investigation_id", "subject", "finding_id", "rule_id", "name", "suspected_client", "category", "location", "signature", "status", "requires_manual_review", "severity", "evidence_tier", "confidence", "detected_at", "evidence_kind", "evidence_source", "evidence_reference", "sha256", "size_bytes", "file_created", "file_modified", "observed_at", "method", "why_it_matters", "limitations"));
         foreach (var f in r.Findings)
             foreach (var e in f.Evidence)
-                sb.AppendLine(string.Join(",", new object?[] { r.Reference, r.InvestigationId, r.Subject, f.Id, f.RuleId, f.Name, f.Category, f.Severity, f.Tier, f.Confidence, f.DetectedAt, e.Kind, e.Source, e.Reference, e.Sha256, e.SizeBytes, e.CreatedTime, e.ModifiedTime, e.ObservedAt, f.Method, f.WhyItMatters, f.Limitations }.Select(Cell)));
+                sb.AppendLine(string.Join(",", new object?[] { r.Reference, r.InvestigationId, r.Subject, f.Id, f.RuleId, f.Name, f.Family, f.Category, f.Location, f.Signature, f.OutcomeLabel, f.NeedsReview ? "yes" : "no", f.Severity, f.Tier, f.Confidence, f.DetectedAt, e.Kind, e.Source, e.Reference, e.Sha256, e.SizeBytes, e.CreatedTime, e.ModifiedTime, e.ObservedAt, f.Method, f.WhyItMatters, f.Limitations }.Select(Cell)));
         File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
     }
 
     public static void Pdf(ReportModel r, string path)
     {
-        var accent = "#6A4CF0";
+        var accent = "#3F64D4";
         string SevColor(string s) => s switch { "CRITICAL" => "#DB2645", "HIGH" => "#E86A33", "MEDIUM" => "#C99A0F", "LOW" => "#2F86D9", _ => "#6B7280" };
         var (title, explanation, _) = r.Verdict();
         Document.Create(c => c.Page(page =>
@@ -87,7 +89,11 @@ public static class ReportExporter
                 Kv("Scan started", r.StartedAt?.UtcDateTime.ToString("u"));
                 Kv("Scan completed", r.CompletedAt?.UtcDateTime.ToString("u"));
                 Kv("Scanner / ruleset", $"{r.EngineVersion} / {r.RulesetVersion}");
-                Kv("Administrator rights", r.Elevated ? "yes" : "no (some artifacts unavailable)");
+                Kv("Administrator rights", r.Elevated ? "yes" : "no");
+                Kv("Examined instance", r.InstanceName == "-" ? null : $"{r.InstanceName} ({r.InstanceLauncher})");
+                Kv("Game directory", r.InstancePath);
+                Kv("Files", r.FilesExamined == 0 ? null : $"{r.FilesExamined} examined, {r.FilesAnalyzed} analysed, {r.FilesSkipped} skipped, {r.FilesUnableToInspect} could not be inspected; {r.Signatures} signatures applied");
+                if (r.InstancePath.Length > 0) col.Item().Text("Only this instance was examined. Other instances, documents, browsers and Windows records were not read.").FontSize(8).FontColor("#6B7280");
                 Kv("Evidence manifest SHA-256", r.ManifestSha256 is null ? null : $"{r.ManifestSha256} ({(r.ManifestVerified == true ? "verified by server" : r.ManifestVerified == false ? "MISMATCH" : "not verified")})");
 
                 col.Item().PaddingTop(10).Text("Verdict").Bold().FontSize(13);
@@ -109,7 +115,9 @@ public static class ReportExporter
                     {
                         fc.Spacing(2);
                         fc.Item().Text($"{i}. {f.Name}").Bold().FontSize(10.5f);
-                        fc.Item().Text($"{f.Severity} · {f.TierLabel} · confidence {f.Confidence}% · {f.Category} · rule {f.RuleId} · {f.DetectedAt.UtcDateTime:u}").FontSize(7.5f).FontColor("#6B7280");
+                        fc.Item().Text($"{f.OutcomeLabel}{(f.NeedsReview ? " (manual review)" : "")} · {f.Severity} · {f.TierLabel} · confidence {f.Confidence}% · {f.Category} · rule {f.RuleId}").FontSize(7.5f).FontColor("#6B7280");
+                        if (f.Family is not null || f.Location is not null || f.Signature is not null)
+                            fc.Item().Text(string.Join("  |  ", new[] { f.Family is null ? null : "Suspected: " + f.Family, f.Location is null ? null : "Location: " + f.Location, f.Signature is null ? null : "Signature: " + f.Signature }.Where(x => x is not null))).FontFamily("Consolas").FontSize(7.5f);
                         fc.Item().Text(f.Description);
                         fc.Item().Text(t => { t.Span("Why this matters: ").SemiBold(); t.Span(f.WhyItMatters); });
                         fc.Item().Text(t => { t.Span("Method: ").SemiBold(); t.Span(f.Method); });
@@ -126,6 +134,11 @@ public static class ReportExporter
                             });
                         }
                     });
+                }
+                if (r.Uninspected.Count > 0)
+                {
+                    col.Item().PaddingTop(12).Text("Files that could not be inspected").Bold().FontSize(13);
+                    foreach (var u in r.Uninspected.Take(300)) col.Item().Text($"{u.Location} — {u.Reason ?? u.Status}").FontFamily("Consolas").FontSize(7f);
                 }
                 if (r.Custody.Count > 0)
                 {

@@ -1,4 +1,5 @@
 using Screensharing.Scanner.Engine;
+using Screensharing.Scanner.Instance;
 using Screensharing.Scanner.Model;
 
 namespace Screensharing.Desktop.Services;
@@ -24,6 +25,9 @@ public static class Payloads
         limitations = Cut(f.Limitations, 2000),
         falsePositiveNotes = Cut(f.FalsePositiveNotes, 2000),
         alternativeExplanations = Cut(f.AlternativeExplanations, 2000),
+        family = f.Family is null ? null : Cut(f.Family, 120),
+        signature = f.Signature is null ? null : Cut(f.Signature, 300),
+        location = f.Location is null ? null : Cut(f.Location, 500),
         detectedAt = f.DetectedAt,
         evidence = f.Evidence.Take(25).Select(e => new
         {
@@ -42,6 +46,11 @@ public static class Payloads
 
     public static object Progress(ScanProgress p) => new
     {
+        files = new
+        {
+            examined = p.FilesExamined, analyzed = p.FilesAnalyzed, skipped = p.FilesSkipped, unableToInspect = p.UnableToInspect,
+            findings = p.Findings, elapsedSeconds = Math.Round(p.Elapsed.TotalSeconds, 1), stage = Cut(p.Stage, 80),
+        },
         progress = Math.Clamp(p.Percent, 0, 100),
         currentActivity = Cut(p.Activity, 200),
         categories = p.Categories.Select(c => new
@@ -69,6 +78,9 @@ public static class Payloads
             _ => Cut(k.Value.ToString(), 1024),
         })).ToList();
 
+    /// <summary>The selected instance as shown to the investigator (no account data; the command line is already redacted).</summary>
+    public static Dictionary<string, object?> Instance(GameInstance i) => i.ToInventory();
+
     public static object Complete(ScanResult r) => new
     {
         manifestSha256 = r.ManifestSha256,
@@ -79,6 +91,20 @@ public static class Payloads
             mods = Items(r.Mods, 3000),
             javaRuntimes = Items(r.JavaRuntimes, 100),
             statistics = r.Statistics,
+            instance = Items([Instance(r.Instance)], 1)[0],
+            inspection = new
+            {
+                examined = (int)r.Inspection["examined"]!,
+                analyzed = (int)r.Inspection["analyzed"]!,
+                skipped = (int)r.Inspection["skipped"]!,
+                unableToInspect = (int)r.Inspection["unableToInspect"]!,
+                byStatus = r.Inspection["byStatus"],
+                uninspected = r.InspectionRecords
+                    .Where(x => x.Status is not (InspectionStatus.Analyzed or InspectionStatus.NotApplicable))
+                    .OrderBy(x => x.Location).Take(300)
+                    .Select(x => new { location = Cut(x.Location, 1024), status = x.Status.ToString(), reason = x.Reason is null ? null : Cut(x.Reason, 500) }).ToList(),
+            },
+            excludedLocations = r.ExcludedLocations.Take(100).Select(e => Cut(e, 300)).ToList(),
         },
         coverage = r.Coverage.Select(c => new { key = c.Key, name = c.Name, status = Status(c.Status), note = c.Message is null ? null : Cut(c.Message, 500) }).ToList(),
         chainOfCustody = new

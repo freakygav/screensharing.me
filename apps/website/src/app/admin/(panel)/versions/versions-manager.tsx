@@ -34,8 +34,8 @@ export function VersionsManager({ versions, usage }: { versions: V[]; usage: Rec
               <td className="text-dim">{fmtDate(v.releasedAt)}</td>
               <td>{usage[v.version] ?? 0}</td>
               <td className="max-w-[200px] truncate font-mono text-[11px]" title={v.sha256 ?? ""}>{v.sha256 ?? "—"}</td>
-              <td><input type="checkbox" checked={v.minimumSupported} onChange={() => patch(v.id, { minimumSupported: !v.minimumSupported })} className="accent-[#7c5cff]" /></td>
-              <td><input type="checkbox" checked={v.active} onChange={() => patch(v.id, { active: !v.active })} className="accent-[#7c5cff]" /></td>
+              <td><input type="checkbox" checked={v.minimumSupported} onChange={() => patch(v.id, { minimumSupported: !v.minimumSupported })} className="accent-[#4c74e8]" /></td>
+              <td><input type="checkbox" checked={v.active} onChange={() => patch(v.id, { active: !v.active })} className="accent-[#4c74e8]" /></td>
             </tr>
           ))}</tbody>
         </table>

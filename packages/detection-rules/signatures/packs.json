@@ -1,0 +1,23 @@
+{
+  "title": "Resource and shader packs",
+  "note": "Pack-name signatures. Pack names are user-controlled, so these are suspicious at most; content-based X-ray detection is the built-in heuristic SSME-H-XRAY_TEXTURES.",
+  "rules": [
+    {
+      "id": "SSME-SP-0001",
+      "name": "X-ray shader pack",
+      "kind": "SHADERPACK_REGEX",
+      "pattern": "(?i)x[-_ ]?ray",
+      "family": "X-ray",
+      "features": [
+        "X-ray via shaders"
+      ],
+      "category": "Utility modification",
+      "severity": "MEDIUM",
+      "tier": "SUSPICIOUS_CONFIGURATION",
+      "confidence": 60,
+      "description": "A shader pack whose name contains \"xray\" is installed. X-ray shaders discard terrain fragments so ores show through blocks.",
+      "falsePositives": "Pack names are user-controlled; a pack may be mis-named or unused.",
+      "limitations": "Only the name is checked; shader programs are not interpreted."
+    }
+  ]
+}

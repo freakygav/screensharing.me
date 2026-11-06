@@ -7,6 +7,8 @@ export interface DetectionView {
   id: string; ruleId: string; name: string; description: string; category: string; categoryKey: string;
   severity: string; tier: string; confidence: number; method: string; whyItMatters: string; limitations: string;
   falsePositiveNotes: string; alternativeExplanations: string; detectedAt: string; evidence: EvidenceView[];
+  family: string | null; signature: string | null; location: string | null;
+  outcome: "CONFIRMED" | "HIGH_CONFIDENCE" | "LOW_CONFIDENCE" | "UNABLE_TO_INSPECT" | "INFORMATIONAL";
 }
 export interface CategoryView { key: string; name: string; status: string; itemsExamined: number; findingsCount: number; message: string | null; startedAt: string | null; completedAt: string | null }
 export interface SnapshotView {
@@ -18,7 +20,13 @@ export interface SnapshotView {
   scan: {
     id: string; status: string; progress: number; currentActivity: string | null; engineVersion: string; rulesetVersion: string; elevated: boolean;
     startedAt: string; completedAt: string | null; lastUpdateAt: string; failureReason: string | null; manifestSha256: string | null; manifestVerified: boolean | null;
-    summary: { installations?: Record<string, unknown>[]; mods?: Record<string, unknown>[]; javaRuntimes?: Record<string, unknown>[]; statistics?: Record<string, number> } | null;
+    summary: {
+      installations?: Record<string, unknown>[]; mods?: Record<string, unknown>[]; javaRuntimes?: Record<string, unknown>[]; statistics?: Record<string, number>;
+      instance?: Record<string, unknown>;
+      inspection?: { examined: number; analyzed: number; skipped: number; unableToInspect: number; byStatus?: Record<string, number>; uninspected?: { location: string; status: string; reason?: string | null }[] };
+      excludedLocations?: string[];
+      live?: { examined: number; analyzed: number; skipped: number; unableToInspect: number; findings?: number; elapsedSeconds?: number; stage?: string };
+    } | null;
     coverage: { key: string; name: string; status: string; note?: string | null }[] | null;
     chainOfCustody: { operations?: { at: string; action: string; target: string }[]; [k: string]: unknown } | null;
     categories: CategoryView[];

@@ -31,7 +31,7 @@ export default async function Investigations({ searchParams }: { searchParams: P
       <PageHeader title={scope === "active" ? "Active investigations" : scope === "history" ? "Investigation history" : "Investigations"} subtitle="Open an investigation to watch it live or review its report." actions={<Link href="/dashboard/investigations/new" className="btn btn-primary"><IconPlus /> New</Link>} />
       <div className="space-y-4 p-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex gap-1 rounded-[10px] border border-line bg-[#0a0c12] p-1 text-[13px]">
+          <div className="flex gap-1 rounded-md border border-line bg-bg p-1 text-[13px]">
             {Object.keys(SCOPES).map((s) => (
               <Link key={s} href={`/dashboard/investigations?scope=${s}${q ? `&q=${encodeURIComponent(q)}` : ""}`} className={`rounded-[7px] px-3 py-1.5 capitalize ${scope === s ? "bg-panel-2 font-semibold text-ink" : "text-muted hover:text-ink"}`}>{s}</Link>
             ))}

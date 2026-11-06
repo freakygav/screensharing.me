@@ -43,17 +43,17 @@ public sealed class ToneBrush : IValueConverter
     private static Color Hex(string h) => (Color)ColorConverter.ConvertFromString(h);
     private static readonly Dictionary<string, Color> Map = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["CRITICAL"] = Hex("#FF4D6A"), ["confirmed"] = Hex("#FF4D6A"), ["FAILED"] = Hex("#FF4D6A"), ["Disconnected"] = Hex("#FF4D6A"), ["Mismatch"] = Hex("#FF4D6A"),
-        ["HIGH"] = Hex("#FF8A4C"), ["strong"] = Hex("#FF8A4C"),
-        ["MEDIUM"] = Hex("#F5C451"), ["suspicious"] = Hex("#F5C451"), ["Reconnecting"] = Hex("#F5C451"), ["SKIPPED"] = Hex("#F5C451"), ["WAITING"] = Hex("#F5C451"),
-        ["LOW"] = Hex("#4DB8FF"), ["CONNECTED"] = Hex("#4DB8FF"),
-        ["COMPLETED"] = Hex("#3DDC97"), ["clear"] = Hex("#3DDC97"), ["Connected"] = Hex("#3DDC97"), ["Verified"] = Hex("#3DDC97"),
-        ["RUNNING"] = Hex("#8A6DFF"), ["SCANNING"] = Hex("#8A6DFF"),
-        ["CONFIRMED_ARTIFACT"] = Hex("#A48BFF"), ["STRONG_INDICATOR"] = Hex("#A48BFF"),
+        ["CRITICAL"] = Hex("#E5484D"), ["confirmed"] = Hex("#E5484D"), ["CONFIRMED"] = Hex("#E5484D"), ["FAILED"] = Hex("#E5484D"), ["Disconnected"] = Hex("#E5484D"), ["Mismatch"] = Hex("#E5484D"),
+        ["HIGH"] = Hex("#EF7A45"), ["strong"] = Hex("#EF7A45"), ["HIGH_CONFIDENCE"] = Hex("#EF7A45"),
+        ["MEDIUM"] = Hex("#D9A53A"), ["suspicious"] = Hex("#D9A53A"), ["review"] = Hex("#D9A53A"), ["LOW_CONFIDENCE"] = Hex("#D9A53A"), ["Reconnecting"] = Hex("#D9A53A"), ["SKIPPED"] = Hex("#D9A53A"), ["WAITING"] = Hex("#D9A53A"),
+        ["LOW"] = Hex("#7D8FB0"), ["CONNECTED"] = Hex("#7D8FB0"), ["UNABLE_TO_INSPECT"] = Hex("#B6B8BE"),
+        ["COMPLETED"] = Hex("#3FA878"), ["clear"] = Hex("#3FA878"), ["Connected"] = Hex("#3FA878"), ["Verified"] = Hex("#3FA878"),
+        ["RUNNING"] = Hex("#4C74E8"), ["SCANNING"] = Hex("#4C74E8"),
+        ["CONFIRMED_ARTIFACT"] = Hex("#8FA9F5"), ["STRONG_INDICATOR"] = Hex("#8FA9F5"),
     };
     public object Convert(object? v, Type t, object? p, CultureInfo c)
     {
-        var color = v is not null && Map.TryGetValue(v.ToString()!, out var col) ? col : Hex("#8B93A8");
+        var color = v is not null && Map.TryGetValue(v.ToString()!, out var col) ? col : Hex("#8C8F97");
         if (p is "soft") color.A = 0x22;
         else if (p is "border") color.A = 0x66;
         var b = new SolidColorBrush(color);

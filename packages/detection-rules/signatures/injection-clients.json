@@ -1,0 +1,32 @@
+{
+  "title": "Injection (ghost) client strings — community sourced",
+  "note": "Strings from the community list in andreaonorato/Minecraft-Cheat-Scanner (Strings Scanner.c), which identifies injection clients from a dump of javaw.exe memory strings. They could not be verified against the clients themselves, so every rule is a WEAK indicator that needs corroboration. Entries shorter than 8 characters in that list (nG@W, +(M0G.V, dinkio, Sa_Vc, 5d@56, TCNH$1, hi.a2, yCcADi, kc((k) were not adopted: across gigabytes of memory they match by chance.",
+  "defaults": {
+    "kind": "STRING",
+    "category": "Injection client",
+    "severity": "HIGH",
+    "tier": "WEAK_INDICATOR",
+    "confidence": 45,
+    "weight": 35,
+    "scopes": ["memory", "class", "binary"],
+    "falsePositives": "Unverified community signature. Short or generic strings can occur in unrelated data; never act on this finding alone.",
+    "limitations": "Targets old (1.7/1.8-era) injection clients; current releases are not covered.",
+    "references": ["https://github.com/andreaonorato/Minecraft-Cheat-Scanner/blob/master/Strings%20Scanner.c"]
+  },
+  "rules": [
+    { "id": "SSME-IC-0001", "name": "AVIX client string", "pattern": "/AVIX-Config", "family": "AVIX (injection client)", "description": "String associated with the AVIX injection client in a community signature list." },
+    { "id": "SSME-IC-0002", "name": "Bape client string", "pattern": "trumpclientftw_bape", "family": "Bape (injection client)", "description": "String associated with the Bape injection client in a community signature list." },
+    { "id": "SSME-IC-0003", "name": "Drek client string", "pattern": "dg82fo.pw", "family": "Drek (injection client)", "description": "Domain associated with the Drek injection client in a community signature list." },
+    { "id": "SSME-IC-0004", "name": "Gucci client string", "pattern": "G0ttaDipMen.java", "family": "Gucci (injection client)", "description": "Source-file name associated with the Gucci injection client in a community signature list." },
+    { "id": "SSME-IC-0005", "name": "Harambe client string", "pattern": "Harambe.png", "family": "Harambe (injection client)", "description": "Resource name associated with the Harambe injection client in a community signature list." },
+    { "id": "SSME-IC-0006", "name": "Incognito client string", "pattern": "czaarek99", "family": "Incognito (injection client)", "description": "String associated with the Incognito injection client in a community signature list.", "falsePositives": "This is also a developer handle that can appear in unrelated credits. Never act on this finding alone." },
+    { "id": "SSME-IC-0007", "name": "Onetap client string", "pattern": "onetap.cc", "family": "Onetap (injection client)", "description": "Domain associated with the Onetap client in a community signature list." },
+    { "id": "SSME-IC-0008", "name": "Spooky client string", "pattern": "bspkrs.IlIIIlIlIllIIlllIllIllIII", "family": "Spooky (injection client)", "description": "Obfuscated class reference associated with the Spooky injection client in a community signature list." },
+    { "id": "SSME-IC-0009", "name": "Vape v2 hidden loader class", "pattern": "com/sun/jna/z/Main", "family": "Vape (injection client)", "confidence": 55, "weight": 45, "description": "Class path associated with Vape 2.06 in a community signature list. The genuine JNA library has no com.sun.jna.z package, so the class hides inside a legitimate library's namespace." },
+    { "id": "SSME-IC-0010", "name": "Time Changer client string", "pattern": "/a.class:::0", "family": "Time Changer (injection client)", "description": "String associated with the Time Changer misplace client in a community signature list." },
+    { "id": "SSME-IC-0011", "name": "Zuiy client string", "pattern": "0SO1Lk2KASxzsd", "family": "Zuiy (injection client)", "description": "String associated with the Zuiy injection client in a community signature list." },
+    { "id": "SSME-IC-0012", "name": "Vape 2.50 network endpoint", "pattern": "74.91.125.194", "family": "Vape (injection client)", "description": "IP address associated with Vape 2.50 in a community signature list.", "falsePositives": "IP addresses are re-assigned over time and can appear in unrelated server lists." },
+    { "id": "SSME-IC-0013", "name": "Vape Lite network endpoint", "pattern": "144.217.241.181", "family": "Vape (injection client)", "description": "IP address associated with Vape Lite in a community signature list.", "falsePositives": "IP addresses are re-assigned over time and can appear in unrelated server lists." },
+    { "id": "SSME-IC-0014", "name": "Vea client string", "pattern": "/tcpnodelaymod/COM1", "family": "Vea (injection client)", "description": "String associated with the Vea injection client in a community signature list." }
+  ]
+}

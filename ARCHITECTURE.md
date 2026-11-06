@@ -17,15 +17,21 @@
                      HTTPS (HTTP only for localhost), JSON, short-lived bearer tokens
 ┌────────────────────────────── apps/desktop (.NET 10, WPF, MVVM) ───────────────────────────────────────────────┐
 │ Screensharing.Desktop  (screensharing.me.exe)          Screensharing.Scanner (class library, no UI)              │
-│  ├ Views/ViewModels: connect, PIN, investigation,       ├ Engine: plan → run, real work-unit progress, custody log  │
-│  │ scan, results, evidence, staff/admin, settings,      ├ Discovery: launcher/installation locator                │
-│  │ about                                                ├ Analysis: JarAnalyzer, ModuleHeuristics, Aho–Corasick    │
-│  ├ Services: ApiClient, InvestigationSession            ├ Modules (9): installations, mods, integrity, logs, jvm,  │
-│  │ (queue + retry + idempotent upload), LocalStore      │  processes, execution, deleted, tamper                   │
-│  │ (SQLite + DPAPI), ReportExporter (QuestPDF)          ├ Windows: Prefetch(MAM), RecycleBin, USN, memory, WinVerifyTrust│
+│  ├ Views/ViewModels: connect, PIN, instance selection   ├ Instance: ProcessInspector (WMI + PEB: cwd, JVM env),    │
+│  │ + consent, scan, results, evidence, staff/admin,     │  JavaLaunch parser, InstanceResolver → GameInstance       │
+│  │ settings, about                                      ├ Engine: ScanScope (hard path guard), InstanceFiles       │
+│  ├ Services: ApiClient, InvestigationSession            │  (discovery/classification), plan → run, InspectionLog,  │
+│  │ (queue + retry + idempotent upload), LocalStore      │  custody log                                             │
+│  │ (SQLite + DPAPI), ReportExporter (QuestPDF)          ├ Analysis: JarAnalyzer, ClassFile (constant pool),        │
+│                                                         │  SignatureIndex (Aho–Corasick per scope), EvidenceScoring│
+│                                                         │  ModuleHeuristics, PngAlpha                              │
+│                                                         ├ Modules (7): launch, mods, gamefiles, files, packs,      │
+│                                                         │  logs, process                                           │
+│                                                         ├ Windows: memory reader, WinVerifyTrust                   │
 │                                                         └ Reporting: integrity manifest (shared algorithm)          │
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-packages/detection-rules/rules.json — single source of truth: embedded in the scanner (offline fallback) and seeded into the DB.
+packages/detection-rules/signatures/*.json — categorised signature databases → build-rules.mjs validates and compiles them into
+rules.json, the single source of truth: embedded in the scanner (offline fallback) and seeded into the DB (admin-editable).
 ```
 
 ## Investigation workflow (sequence)
@@ -33,9 +39,9 @@ packages/detection-rules/rules.json — single source of truth: embedded in the 
 1. Investigator `POST /api/investigations` → backend creates `Investigation`, issues a 6-digit PIN: CSPRNG digits, stored as `HMAC-SHA256(APP_SECRET, pin)` for lookup plus an AES-256-GCM sealed copy so the owner can re-display it while pending. TTL 15 min (admin-configurable). Event `investigation.created`.
 2. Player opens `screensharing.me.exe` → `GET /api/desktop/version` (supported? update?).
 3. Player enters the PIN → `POST /api/desktop/pin/claim`. Rate-limited per IP (10/10 min) plus a global failure circuit breaker (300/min). A single atomic `updateMany … where claimedAt is null` makes the PIN single-use; the sealed PIN is wiped. Returns an **investigation-scoped** device token (32 random bytes; SHA-256 stored), the investigator's display name and the consent text. Event `device.connected`.
-4. Player reviews sources and consents → `POST /api/desktop/consent`. Nothing is collected before this. Event `consent.given`.
-5. `GET /api/desktop/rules` (live catalog) → `POST /api/desktop/scan/start` with the module list.
-6. Scanner plans (counts real work items), runs modules; `InvestigationSession` uploads progress (≤1/s), findings in idempotent batches of 50 (`clientFindingId` = deterministic hash) and a heartbeat every 15 s. Events `scan.progress`, `scan.findings`.
+4. The client lists the **running Minecraft instances** it identified (see *Instance identification*). The player confirms one (choosing when several run) and consents → `POST /api/desktop/consent`. Nothing is collected before this. Right before starting, the selected process is re-identified so a closed or restarted game is never scanned by mistake. Event `consent.given`.
+5. `GET /api/desktop/rules` (live catalog) → `POST /api/desktop/scan/start` with the stage list and the selected instance (launcher, name, game directory, version, loader, PID — no account data).
+6. Scanner discovers the instance's files inside the scope, plans (counts real work items), runs modules; `InvestigationSession` uploads progress with live file counters (≤1/s), findings in idempotent batches of 50 (`clientFindingId` = deterministic hash) and a heartbeat every 15 s. Events `scan.progress`, `scan.findings`.
 7. `POST /api/desktop/scan/complete` with inventory, coverage, chain of custody and the **integrity manifest** (SHA-256 over canonical finding lines). The server refuses completion if it holds a different number of findings, recomputes the manifest from what it stored and records `manifestVerified`. Event `scan.completed`.
 8. The investigator's page receives every event through SSE and re-fetches the snapshot; the report is exportable (PDF/JSON/CSV).
 
@@ -47,6 +53,8 @@ packages/detection-rules/rules.json — single source of truth: embedded in the 
 * SSE streams are resumable with `Last-Event-ID`; events are durable rows (`InvestigationEvent`), so updates written by any server instance are delivered (in-process bus only shortens latency).
 
 ## Data model (PostgreSQL / Prisma)
+
+`Detection` carries `family` (suspected client), `signature` and `location` (instance-relative) since migration `20261106120000_instance_scoped_signatures`; `DetectionRule` carries `scopes`, `weight` and `packages`. Rules that leave the catalog are disabled by the seed, not deleted (old reports reference them).
 
 `User` (role USER/ADMIN — administrators are users with a role, one auth path and one audit trail) · `Session` (WEB cookie / DESKTOP bearer, hashed tokens) · `EmailToken` (verify/reset, hashed, single-use) · `Investigation` · `InvestigationPin` · `ConnectedDevice` · `Scan` · `ScanCategory` · `Detection` · `Evidence` (ordered by `position`) · `DetectionRule` · `AuditLog` · `ApplicationVersion` · `InvestigationEvent` · `RateLimitBucket` · `SystemConfig` · `MailOutbox`. Schema: `apps/website/prisma/schema.prisma`; migration: `prisma/migrations/20261106000000_init`.
 
@@ -68,9 +76,25 @@ All payloads are validated with strict zod schemas (`apps/website/src/lib/valida
 | `POST /api/desktop/auth/login · logout`, `GET /api/desktop/staff/investigations[/:id]` | staff bearer (8 h) | desktop staff/admin console |
 | `PATCH /api/admin/users/:id`, `POST …/reset-link`, `DELETE /api/admin/sessions/:id · devices/:id`, `POST/PATCH /api/admin/rules[/:id]`, `POST/PATCH /api/admin/versions[/:id]`, `PATCH /api/admin/config` | admin cookie | administration (every call audited) |
 
+## Instance identification and scope
+
+* **ProcessInspector** enumerates `java.exe`/`javaw.exe` (WMI: command line, parent, start time) and reads, from each process's own parameter block (`NtQueryInformationProcess` → PEB → `RTL_USER_PROCESS_PARAMETERS`), the **working directory** and only the three JVM option variables (`JAVA_TOOL_OPTIONS`, `_JAVA_OPTIONS`, `JDK_JAVA_OPTIONS`). Nothing else from the environment is kept.
+* **JavaLaunch** splits the command line exactly like the C runtime (`CommandLineToArgvW`) into JVM options, class path, main class (unwrapping launcher wrappers such as Modrinth's `MinecraftLaunch`) and game arguments.
+* **InstanceResolver** accepts a process as Minecraft only for known game/loader/launcher main classes or game arguments. The game directory is `--gameDir` (absolute, or relative to the working directory) or, for launchers that start the game in the instance folder without `--gameDir` (Prism/MultiMC `EntryPoint`), the working directory. The directory must exist and contain game markers (`options.txt`, `logs`, `mods`, `config`, `saves`…). The launcher and instance name come from the folder layout (`instance.cfg`, `profiles/<name>`, `minecraftinstance.json`), the launcher brand property and the parent process. **If any of this fails, the instance is returned unresolved with the exact reason and cannot be scanned** — there is no fallback to `.minecraft`.
+* **ScanScope** is built from the instance folder and the files the process attests to (class-path jars, their version manifests, `-javaagent` jars, and native modules loaded into the process). Every open, hash, stat and directory enumeration calls `Scope.Demand`; anything else throws `ScopeViolationException`, is recorded and fails that stage loudly. Links inside the instance that lead outside are not followed, except the content folders the game itself loads (`mods`, `config`, `resourcepacks`, `shaderpacks`), which are followed and reported (`SSME-H-LINKED_FOLDER`).
+* **InstanceFiles** walks the instance (bounded depth and count), excludes launcher-shared and bulky non-code folders (`saves`, `assets`, `versions`, `libraries`, caches…, each listed in the report) and classifies files by **magic bytes first** (`MZ` → executable, `PK\x03\x04` → archive) and extension second.
+
+## Detection engine
+
+* Signatures live in `packages/detection-rules/signatures/*.json` (one file per category). Rule kinds: `MOD_ID`, `MOD_ID_REGEX`, `PACKAGE_PREFIX`, `STRING` (with scopes `class`, `resource`, `config`, `log`, `script`, `binary`, `memory`), `MEMORY_STRING`, `SHA256`, `INSTANCE_PATH_REGEX`, `EXECUTABLE_REGEX`, `FILE_NAME_REGEX`, `RESOURCEPACK_REGEX`, `SHADERPACK_REGEX`, `FEATURE_NAME`, `MODULE_PACKAGE`, `KNOWN_MOD` (with expected `packages`), `LIBRARY_PACKAGE`, `BUILTIN`. Adding a signature of an existing kind needs no code change.
+* **JarAnalyzer** reads metadata, manifest, nested archives (3 levels), and the content of every entry: class files are validated (`CAFEBABE`) and their constant-pool UTF-8 strings matched; text resources and entry names are matched; embedded PE images are recognised regardless of name and matched as binaries. Archives with tampered end-of-central-directory records ("anti-unzip") are normalised in memory.
+* **EvidenceScoring** groups indicators per file and suspected family, sums weights and derives the tier (see DETECTION_CATALOG.md → Scoring). Generic indicator families are deferred until Modrinth verification and never reported for verified or genuine known mods.
+* Stages: `launch` (agents, JVM option variables) · `mods` (archives, impersonation, encryption, embedded executables, metadata consistency, Modrinth) · `gamefiles` (SHA-1 of class-path jars vs. version manifest; unverifiable jars analysed) · `files` (instance artifacts, configs, scripts, executables, redirected folders) · `packs` (X-ray by content, names, strings) · `logs` (mod lists, crash reports, non-chat strings) · `process` (modules, bounded memory).
+* Every file ends with an `InspectionRecord`: *Analyzed*, *NotApplicable* (type not analysed) or a problem (*Unreadable, TooLarge, Encrypted, Corrupt, LinkNotFollowed*). Problems on code-bearing files become *Unable to inspect* findings, so nothing is skipped silently.
+
 ## Desktop module contract
 
-`IScanModule { Key, Name, Activity, SkipReason(ctx), Plan(ctx) → work units, RunAsync(ctx) }`. Findings are created only through `ScanContext.Report(ruleId, …)`, which pulls severity/tier/confidence/limitations/false-positive text from the active catalog and **returns nothing if the rule is disabled**. All file access goes through `ScanContext.OpenRead` (read-only, shared) and is recorded in the custody log.
+`IScanModule { Key, Name, Activity, SkipReason(ctx), Plan(ctx) → work units, RunAsync(ctx) }`. Findings are created only through `ScanContext.Report(ruleId, …)`, which pulls severity/tier/confidence/limitations/false-positive text from the active catalog and **returns nothing if the rule is disabled**. All file access goes through `ScanContext.OpenRead` / `ScopedFileSystem` (scope-checked, read-only, shared) and is recorded in the custody log.
 
 ## Why one Next.js service instead of separate api/realtime services
 

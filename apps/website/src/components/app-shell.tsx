@@ -7,18 +7,18 @@ export interface NavItem { href: string; label: string; icon: React.ReactNode; e
 export function AppShell({ items, user, badge, children }: { items: NavItem[]; user: { displayName: string; role: string; email: string | null }; badge?: string; children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen">
-      <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-line bg-[#090b10]">
+      <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-line bg-bg">
         <Link href="/" className="flex h-14 items-center gap-2.5 border-b border-line px-5 text-[15px] font-bold tracking-tight">
           <Logo />
           <span>screensharing<span className="text-accent-2">.me</span></span>
         </Link>
-        {badge && <div className="px-5 pt-4"><span className="chip border-[rgba(124,92,255,.4)] bg-[rgba(124,92,255,.12)] text-[#d8ceff]">{badge}</span></div>}
+        {badge && <div className="px-5 pt-4"><span className="chip border-accent/40 accent-soft text-ink">{badge}</span></div>}
         <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
           {items.map((i) => <NavLink key={i.href} {...i} />)}
         </nav>
         <div className="border-t border-line p-3">
-          <div className="flex items-center gap-3 rounded-[10px] px-2 py-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#8a6dff] to-[#4db8ff] text-xs font-bold text-white">{user.displayName.slice(0, 2).toUpperCase()}</div>
+          <div className="flex items-center gap-3 rounded-md px-2 py-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-panel-2 border border-line-strong text-xs font-bold text-white">{user.displayName.slice(0, 2).toUpperCase()}</div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13px] font-semibold">{user.displayName}</div>
               <div className="truncate text-[11.5px] text-dim">{user.role === "ADMIN" ? "Administrator" : user.email ?? "No email"}</div>

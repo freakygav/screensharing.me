@@ -204,18 +204,43 @@ export interface Verdict {
   explanation: string;
 }
 
-/** Evidence-tiered verdict. Deliberately never says "cheater": it describes what the evidence supports. */
-export function computeVerdict(counts: Record<EvidenceTier, number>, completed: boolean): Verdict {
+export type Outcome = "CONFIRMED" | "HIGH_CONFIDENCE" | "LOW_CONFIDENCE" | "UNABLE_TO_INSPECT" | "INFORMATIONAL";
+export const UNINSPECTABLE_RULE = "SSME-H-UNINSPECTABLE";
+
+/** How a finding should be read (mirrors Finding.Outcome in the desktop scanner). */
+export function outcomeOf(ruleId: string, tier: EvidenceTier): Outcome {
+  if (ruleId === UNINSPECTABLE_RULE) return "UNABLE_TO_INSPECT";
+  if (tier === "CONFIRMED_ARTIFACT") return "CONFIRMED";
+  if (tier === "STRONG_INDICATOR") return "HIGH_CONFIDENCE";
+  if (tier === "SUSPICIOUS_CONFIGURATION" || tier === "WEAK_INDICATOR") return "LOW_CONFIDENCE";
+  return "INFORMATIONAL";
+}
+
+export const OUTCOME_LABEL: Record<Outcome, string> = {
+  CONFIRMED: "Confirmed detection",
+  HIGH_CONFIDENCE: "High-confidence finding",
+  LOW_CONFIDENCE: "Low-confidence finding",
+  UNABLE_TO_INSPECT: "Unable to inspect",
+  INFORMATIONAL: "Informational",
+};
+
+/**
+ * Evidence-tiered verdict. Deliberately never says "cheater": it describes what the evidence supports, and a scan
+ * without findings is "no evidence detected" — never "clean".
+ */
+export function computeVerdict(counts: Record<EvidenceTier, number>, completed: boolean, extra: { uninspectable?: number; signatures?: number } = {}): Verdict {
   if (!completed) return { level: "review", title: "Scan not complete", explanation: "The verdict is computed when the scan finishes." };
+  const gaps = extra.uninspectable ? ` ${extra.uninspectable} file${extra.uninspectable === 1 ? "" : "s"} could not be inspected.` : "";
   if (counts.CONFIRMED_ARTIFACT > 0)
-    return { level: "confirmed", title: "Confirmed artifact match", explanation: "At least one artifact matched a verified signature of a prohibited modification. Review the evidence and correlate with timing before taking action." };
+    return { level: "confirmed", title: "Confirmed detection", explanation: "At least one file of the instance matched a verified signature of a known cheat or prohibited modification. Review the evidence and its timing before taking action." + gaps };
   if (counts.STRONG_INDICATOR > 0)
-    return { level: "strong", title: "Strong forensic indicators", explanation: "Evidence strongly indicates a prohibited modification, but no artifact was matched against a verified signature. Manual review is required." };
-  if (counts.SUSPICIOUS_CONFIGURATION > 0)
-    return { level: "suspicious", title: "Suspicious configuration", explanation: "The system contains configurations commonly associated with prohibited modifications or concealment. These have legitimate explanations; review each finding." };
-  if (counts.WEAK_INDICATOR > 0)
-    return { level: "review", title: "Weak indicators only", explanation: "Only weak indicators were found. On their own they do not support a conclusion." };
-  return { level: "clear", title: "No indicators found", explanation: "No examined artifact matched a detection rule. This does not prove the absence of modifications outside the examined scope; see coverage." };
+    return { level: "strong", title: "High-confidence suspicious findings", explanation: "Evidence strongly indicates a prohibited modification, but nothing matched a verified signature. Manual review is required." + gaps };
+  if (counts.SUSPICIOUS_CONFIGURATION > 0 || counts.WEAK_INDICATOR > 0)
+    return { level: "review", title: "Low-confidence findings only", explanation: "Only weak or policy-dependent indicators were found. On their own they do not support a conclusion; review each finding." + gaps };
+  return {
+    level: "clear", title: "No evidence detected",
+    explanation: `Nothing in the examined instance matched ${extra.signatures ? `the ${extra.signatures} signatures and heuristics` : "the signature database"}. This is not proof that the player is clean: only the selected Minecraft instance was examined, and unknown or well-hidden modifications are not covered.` + gaps,
+  };
 }
 
 /** Full state used by the live page, the report page, exports and the desktop staff view. */
@@ -268,6 +293,10 @@ export async function buildSnapshot(investigationId: string, opts: { includeDete
           limitations: d.limitations,
           falsePositiveNotes: d.falsePositiveNotes,
           alternativeExplanations: d.alternativeExplanations,
+          family: d.family,
+          signature: d.signature,
+          location: d.location,
+          outcome: outcomeOf(d.ruleId, d.tier),
           detectedAt: d.detectedAt.toISOString(),
           evidence: d.evidence.map((e) => ({
             id: e.id,
@@ -338,7 +367,10 @@ export async function buildSnapshot(investigationId: string, opts: { includeDete
       })),
     },
     counts: { total, severity: severityCounts, tier: tierCounts },
-    verdict: computeVerdict(tierCounts, completed),
+    verdict: computeVerdict(tierCounts, completed, {
+      uninspectable: scan ? await db.detection.count({ where: { scanId: scan.id, ruleId: UNINSPECTABLE_RULE } }) : 0,
+      signatures: Number(((scan?.summary as { statistics?: Record<string, number> } | null)?.statistics ?? {}).signatures ?? 0) || undefined,
+    }),
     detections,
     lastEventId: lastEvent ? lastEvent.id.toString() : "0",
     generatedAt: new Date().toISOString(),

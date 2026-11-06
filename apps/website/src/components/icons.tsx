@@ -35,14 +35,8 @@ export const IconLock = (p: P) => (<svg {...base(p)}><rect x="5" y="10.5" width=
 export function Logo({ size = 22 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
-      <defs>
-        <linearGradient id="ssme-g" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#8a6dff" />
-          <stop offset="1" stopColor="#4db8ff" />
-        </linearGradient>
-      </defs>
-      <rect x="1" y="1" width="30" height="30" rx="8" fill="url(#ssme-g)" />
-      <rect x="7.5" y="8.5" width="17" height="11" rx="2" fill="none" stroke="#fff" strokeWidth="2" />
+      <rect x="1" y="1" width="30" height="30" rx="7" fill="#4c74e8" />
+      <rect x="7.5" y="8.5" width="17" height="11" rx="1.5" fill="none" stroke="#fff" strokeWidth="2" />
       <path d="M12.5 24h7M16 19.5V24" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
       <circle cx="16" cy="14" r="2.2" fill="#fff" />
     </svg>

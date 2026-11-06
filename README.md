@@ -6,7 +6,7 @@ hashed, explained evidence back in real time.
 
 * **Website & API** — Next.js 16 (App Router, TypeScript, Tailwind 4), Prisma 6, PostgreSQL, Argon2id auth, Server-Sent Events.
 * **Windows client** — .NET 10, WPF (MVVM, CommunityToolkit.Mvvm), SQLite (Microsoft.Data.Sqlite) + DPAPI, QuestPDF; single self-contained `screensharing.me.exe`.
-* **Scanner engine** — 9 collection modules (installations, mod archives, game-file integrity, game logs, JVM configuration, processes & memory, Prefetch/BAM, Recycle Bin/USN journal, anti-forensics), 110-rule catalog, five evidence tiers.
+* **Scanner engine** — examines **only the Minecraft instance the player is running** (identified from the game process; refused if it cannot be identified): launch configuration, mod archives, class-path integrity, configs/scripts/executables, resource & shader packs, logs & crash reports, the game process and its memory. 98 detection signatures and heuristics in categorised databases (`packages/detection-rules/signatures`), constant-pool string matching, evidence scoring, evasion checks, and five outcome classes (confirmed, high confidence, low confidence, unable to inspect, informational).
 
 **Live:** https://screensharing-me-azure.vercel.app · repository: https://github.com/freakygav/screensharing.me (private) ·
 hosted on Vercel (project `screensharing-me`, root directory `apps/website`, auto-deploys on every push to `main`) with
@@ -91,18 +91,18 @@ Produces `artifacts/desktop/screensharing.me.exe` (self-contained win-x64, ~75 M
 ## Use it
 
 1. Register on the website → **New investigation** → you get a PIN such as `483-921`.
-2. On the player's PC run `screensharing.me.exe` → **I have an investigation PIN** → enter the PIN → review the consent screen → optionally **Restart as administrator** (unlocks Prefetch, BAM, USN journal, Security log) → **Begin scan**.
-3. The investigation page updates live (connection, version, progress, categories, findings, severity breakdown) and shows the final report with search/filter/sort, expandable evidence, coverage, inventory and chain of custody; export PDF/JSON/CSV.
+2. The player starts Minecraft, runs `screensharing.me.exe` → **I have an investigation PIN** → enters the PIN → confirms the running instance the scanner identified (and picks one if several run) → consents → **Begin scan**.
+3. The investigation page updates live (instance, stage, file counters, findings) and shows the final report: verdict, outcome counts, a findings table (detection, suspected client, location, signature, confidence, severity, confirmed/manual review) with evidence, files not inspected, inventory, coverage and chain of custody; export PDF/JSON/CSV.
 
 ## Tests
 
 | Suite | Command | Result (2026-11-06) |
 |---|---|---|
-| Website unit (vitest) | `cd apps/website && npm test` | 19 / 19 passed |
+| Website unit (vitest) | `cd apps/website && npm test` | 21 / 21 passed |
 | API end-to-end (live server) | `SSME_ADMIN_PASSWORD=… node --test tests/e2e/api-flow.test.mjs` | 18 / 18 passed |
-| Scanner (fixtures, parsers, engine, live machine) | `dotnet test apps/desktop/tests/Screensharing.Scanner.Tests` | 34 / 34 passed |
-| Desktop end-to-end + UI rendering | `dotnet test apps/desktop/tests/Screensharing.Desktop.Tests` | 3 passed, 1 opt-in skipped |
-| Full real-machine scan → live server | `SSME_E2E_FULL=1 dotnet test … --filter Full_system` | passed: 592 findings, 2,272 mods, manifest verified |
+| Scanner (scope, identification, detection, evasion, engine) | `dotnet test apps/desktop/tests/Screensharing.Scanner.Tests` | 57 / 57 passed |
+| Live running instance (opt-in) | `SSME_LIVE_INSTANCE=1 dotnet test … --filter Running_instance` | passed: Modrinth instance identified, 1,295 files in 13 s, 0 scope violations |
+| Desktop end-to-end + UI rendering | `SSME_E2E_FULL=1 dotnet test apps/desktop/tests/Screensharing.Desktop.Tests` | 4 / 4 passed |
 | Production build | `cd apps/website && npx next build` | succeeds |
 
 Details and the false-positive measurement are in [documentation/TESTING.md](documentation/TESTING.md).
@@ -115,4 +115,4 @@ See [documentation/DEPLOYMENT.md](documentation/DEPLOYMENT.md).
 
 **Complete and tested:** registration (username, optional email), login by username or email, email verification, password reset (verified email) and admin-issued reset links (no-email accounts), rate limiting, CSRF/Origin checks, PIN creation/expiry/single-use/brute-force protection, desktop connect/consent/scan/upload with reconnect handling, live SSE updates, findings with evidence/hashes/limitations, integrity manifest, chain of custody, reports (web + desktop PDF/JSON/CSV), investigator dashboard, admin console (users, investigations, sessions/devices, detection catalog editing, app versions, audit log, configuration, mail outbox), desktop admin/staff console, settings, about, single-file EXE.
 
-**Needs further work:** Amcache/SRUM/ShellBags/Jump Lists/Sysmon collectors; SHA-256 fingerprints for specific cheat releases (none shipped — none could be verified); identifiers for closed-source clients; Authenticode signing of the EXE and an auto-updater; SMTP delivery is implemented but only exercised through the outbox; Prefetch/BAM/USN rule paths need administrator-run integration testing on a machine with matching artifacts (parsers are unit-tested); mobile layout of the admin console is functional but not polished.
+**Needs further work:** SHA-256 fingerprints for specific cheat releases (none shipped — none could be verified); identifiers for closed-source clients and for Aristois/Impact/RusherHack/Future/ThunderHack (not verified yet); memory detection against a real cheat-loaded JVM; Forge/NeoForge/Lunar launches tested on a real machine; Authenticode signing of the EXE and an auto-updater; SMTP delivery is implemented but only exercised through the outbox.

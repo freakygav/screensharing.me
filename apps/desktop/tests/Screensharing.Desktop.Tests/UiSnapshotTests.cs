@@ -64,29 +64,39 @@ public class UiSnapshotTests
         fx.AddMod("meteor-client-0.5.8.jar", new FixtureBuilder.JarSpec { FabricId = "meteor-client", FabricName = "Meteor Client", Classes = ["meteordevelopment/meteorclient/MeteorClient", "meteordevelopment/meteorclient/systems/modules/combat/KillAura"] });
         fx.AddMod("qol-tools.jar", new FixtureBuilder.JarSpec { FabricId = "qol-tools", Classes = ["x/client/module/combat/AimAssist", "x/client/module/combat/TriggerBot", "x/client/module/movement/Scaffold", "x/client/module/movement/Speed"] });
         fx.AddFabricLog([("sodium", "0.6.0"), ("meteor-client", "0.5.8"), ("qol-tools", "1.0"), ("old-helper", "2.1")]);
-        var engine = new ScanEngine(new ScanOptions { Rules = RuleSet.LoadEmbedded(), AppDataOverride = fx.AppData, UserProfileOverride = fx.UserProfile, IncludeSystemArtifacts = false, ModrinthLookup = false, MemoryScan = false });
+        Directory.CreateDirectory(Path.Combine(fx.GameDir, "meteor-client"));
+        var engine = new ScanEngine(new ScanOptions { Rules = RuleSet.LoadEmbedded(), Target = fx.Target(), ModrinthLookup = false, MemoryScan = false });
         ScanProgress? mid = null;
         engine.Progress += p => { if (p.Percent is > 35 and < 70 && mid is null) mid = p; };
         var result = engine.RunAsync().GetAwaiter().GetResult();
 
         var inv = new InvestigationInfo("cl_demo", "INV-7KQ2-M9XD", "Notch_", "play.example.net", "ModeratorAlex", DateTimeOffset.UtcNow.AddMinutes(-4));
-        var consent = new ConsentInfo("2026-11", "The investigator has asked you to run a forensic scan for Minecraft modifications. With your consent, screensharing.me will read Minecraft and launcher folders, Java installations, running Java processes, Windows execution records and selected logs. It does not read browser data, passwords, launcher account tokens, documents or photos, and it does not modify any file.");
+        var consent = new ConsentInfo("2026-11b", "The investigator has asked you to run a forensic scan of the Minecraft instance you are playing. Before the scan starts you choose which running instance is examined. With your consent, screensharing.me reads only that instance: its folder (mods, configuration, resource and shader packs, logs and crash reports), the game files it loads, and the running game process (its launch arguments, loaded modules and a bounded read of its memory). Nothing outside the instance is read. No file is changed.");
         var report = ReportModel.FromLocal(result, inv, manifestVerified: true);
 
-        var scan = new ScanViewModel(main, inv);
+        var target = fx.Target();
+        var scan = new ScanViewModel(main, inv, target);
         foreach (var (key, name) in engine.Categories) scan.Categories.Add(new CategoryRow { Key = key, Name = name });
         typeof(ScanViewModel).GetMethod("Apply", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(scan, [mid ?? new ScanProgress(50, "Examining installed modifications…", [], 50, 100)]);
         scan.Findings = result.Findings.Count(f => f.DetectedAt <= DateTimeOffset.UtcNow);
+        scan.Elapsed = "0:07";
 
         var results = new ResultsViewModel(main, report);
-        results.Visible[0].Expanded = true;
+        var investigation = new InvestigationViewModel(main, inv, consent, alreadyConsented: false, detectNow: false);
+        investigation.Instances.Add(new InstanceOption { Instance = target });
+        investigation.Instances.Add(new InstanceOption { Instance = new Screensharing.Scanner.Instance.GameInstance
+        {
+            ProcessId = 18232, ProcessName = "javaw.exe", Launcher = "Unknown", Name = "javaw.exe (PID 18232)", GameDirectory = "", InstanceRoot = "", GameDirectorySource = "unknown",
+            Resolved = false, Problem = "The game was started without a --gameDir argument and its working directory could not be read: the game process could not be opened for reading (Windows error 5). If the game runs as administrator, run the scanner as administrator too.",
+        } });
+        investigation.Selected = investigation.Instances[0];
 
         var pin = new PinViewModel(main) { Pin = "483921" };
         var screens = new (string Name, CommunityToolkit.Mvvm.ComponentModel.ObservableObject Vm)[]
         {
             ("01-connect", main.Current!),
             ("02-pin-entry", pin),
-            ("03-investigation-dashboard", new InvestigationViewModel(main, inv, consent, alreadyConsented: false)),
+            ("03-instance-and-consent", investigation),
             ("04-scan-progress", scan),
             ("05-detection-results", results),
             ("06-evidence-viewer", new EvidenceViewModel(main, report, report.Findings[0])),

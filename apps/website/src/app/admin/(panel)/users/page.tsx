@@ -26,7 +26,7 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
                 <tr key={u.id}>
                   <td><div className="text-ink">{u.displayName}</div><div className="text-[11.5px] text-dim">@{u.username}</div></td>
                   <td>{u.email ? <>{u.email} <span className={`ml-1 text-[11px] ${u.emailVerified ? "text-ok" : "text-med"}`}>{u.emailVerified ? "verified" : "unverified"}</span></> : <span className="text-dim">none</span>}</td>
-                  <td><span className={`chip ${u.role === "ADMIN" ? "text-[#d8ceff]" : ""}`}>{u.role}</span>{u.disabled && <span className="chip ml-1 text-crit">DISABLED</span>}</td>
+                  <td><span className={`chip ${u.role === "ADMIN" ? "text-ink" : ""}`}>{u.role}</span>{u.disabled && <span className="chip ml-1 text-crit">DISABLED</span>}</td>
                   <td>{u._count.investigations}</td>
                   <td className="text-dim">{fmtDate(u.lastLoginAt)}</td>
                   <td className="text-dim">{fmtDate(u.createdAt)}</td>

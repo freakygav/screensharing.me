@@ -246,6 +246,9 @@ model Detection {
   limitations             String
   falsePositiveNotes      String
   alternativeExplanations String
+  family                  String? // suspected cheat / client / component
+  signature               String? // matched signature or indicator, readable
+  location                String? // location inside the examined instance
   detectedAt              DateTime
   receivedAt              DateTime     @default(now())
 
@@ -279,7 +282,7 @@ model DetectionRule {
   name               String
   description        String
   category           String
-  kind               String // MOD_ID, PACKAGE_PREFIX, SHA256, MEMORY_STRING, EXECUTABLE_NAME, FILE_NAME, KNOWN_MOD
+  kind               String // see packages/detection-rules/build-rules.mjs (KINDS)
   pattern            String
   family             String?
   features           String[]
@@ -290,6 +293,9 @@ model DetectionRule {
   falsePositives     String
   limitations        String
   references         String[]
+  scopes             String[]     @default([]) // STRING rules: class, resource, config, log, script, binary, memory
+  weight             Int          @default(0) // contribution to the per-file family score (0 = derived from tier)
+  packages           String[]     @default([]) // KNOWN_MOD: packages genuine builds ship
   enabled            Boolean      @default(true)
   version            Int          @default(1)
   createdAt          DateTime     @default(now())

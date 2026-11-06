@@ -11,17 +11,16 @@ internal static class TestUtil
     public static ScanOptions Options(FixtureBuilder fx, RuleSet? rules = null) => new()
     {
         Rules = rules ?? Rules,
-        AppDataOverride = fx.AppData,
-        UserProfileOverride = fx.UserProfile,
-        IncludeSystemArtifacts = false,
+        Target = fx.Target(),
         ModrinthLookup = false,
         MemoryScan = false,
     };
 
-    public static async Task<ScanResult> Scan(FixtureBuilder fx, RuleSet? rules = null) =>
-        await new ScanEngine(Options(fx, rules)).RunAsync();
+    public static async Task<ScanResult> Scan(FixtureBuilder fx, RuleSet? rules = null, CancellationToken ct = default) =>
+        await new ScanEngine(Options(fx, rules)).RunAsync(ct);
 
-    public static IEnumerable<Finding> AboveInconclusive(this ScanResult r) => r.Findings.Where(f => f.Tier != EvidenceTier.Inconclusive);
+    /// <summary>Findings that claim something (everything except informational and unable-to-inspect entries).</summary>
+    public static IEnumerable<Finding> Detections(this ScanResult r) => r.Findings.Where(f => f.Outcome is FindingOutcome.Confirmed or FindingOutcome.HighConfidence or FindingOutcome.LowConfidence);
 
     public static readonly FixtureBuilder.JarSpec Sodium = new() { FabricId = "sodium", FabricName = "Sodium", Classes = ["net/caffeinemc/mods/sodium/client/SodiumClientMod", "net/caffeinemc/mods/sodium/client/render/chunk/RenderSection"] };
     public static readonly FixtureBuilder.JarSpec Lithium = new() { FabricId = "lithium", Classes = ["net/caffeinemc/mods/lithium/common/LithiumMod"] };
@@ -33,7 +32,9 @@ internal static class TestUtil
     };
     public static readonly FixtureBuilder.JarSpec Meteor = new()
     {
-        FabricId = "meteor-client", FabricName = "Meteor Client",
+        FabricId = "meteor-client", FabricName = "Meteor Client", Mixins = ["meteor-client.mixins.json"],
         Classes = ["meteordevelopment/meteorclient/MeteorClient", "meteordevelopment/meteorclient/systems/modules/combat/KillAura", "meteordevelopment/meteorclient/systems/modules/combat/CrystalAura", "meteordevelopment/meteorclient/systems/modules/movement/NoFall"],
+        Resources = new() { ["meteor-client.mixins.json"] = "{\"package\":\"meteordevelopment.meteorclient.mixin\"}" },
     };
+    public static readonly FixtureBuilder.JarSpec Wurst = new() { FabricId = "wurst", FabricName = "Wurst Client", Classes = ["net/wurstclient/WurstClient", "net/wurstclient/hacks/KillauraHack"] };
 }

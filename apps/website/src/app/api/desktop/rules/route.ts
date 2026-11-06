@@ -15,6 +15,7 @@ export const GET = handler(async (req: Request) => {
       id: r.id, name: r.name, description: r.description, category: r.category, kind: r.kind, pattern: r.pattern,
       family: r.family, features: r.features, severity: r.severity, tier: r.tier, confidence: r.confidence,
       classification: r.classification, falsePositives: r.falsePositives, limitations: r.limitations, references: r.references,
+      scopes: r.scopes, weight: r.weight, packages: r.packages,
     })),
   });
 });

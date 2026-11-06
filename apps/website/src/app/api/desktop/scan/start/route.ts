@@ -24,12 +24,13 @@ export const POST = handler(async (req: Request) => {
         engineVersion: body.engineVersion,
         rulesetVersion: body.rulesetVersion,
         elevated: body.elevated,
+        summary: body.instance ? { instance: body.instance } : undefined,
         categories: { create: body.categories.map((c, i) => ({ key: c.key, name: c.name, order: i })) },
       },
     });
     await tx.investigation.update({ where: { id: device.investigationId }, data: { status: "SCANNING" } });
     await tx.connectedDevice.update({ where: { id: device.id }, data: { elevated: body.elevated, lastHeartbeatAt: new Date() } });
-    await publish(device.investigationId, "scan.started", { scanId: s.id, restarted: Boolean(existing) }, tx);
+    await publish(device.investigationId, "scan.started", { scanId: s.id, restarted: Boolean(existing), instance: body.instance ?? null }, tx);
     return s;
   });
   await audit({ actorType: "DEVICE", action: existing ? "desktop.scan_restarted" : "desktop.scan_started", targetType: "Scan", targetId: scan.id });

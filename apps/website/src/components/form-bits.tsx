@@ -4,7 +4,7 @@ import { useState } from "react";
 export function FormError({ message }: { message: string | null }) {
   if (!message) return null;
   return (
-    <div role="alert" className="fade-up rounded-[10px] border border-[rgba(255,77,106,.35)] bg-[rgba(255,77,106,.08)] px-3.5 py-2.5 text-[13px] text-[#ffd4dc]">
+    <div role="alert" className="fade-up rounded-md border border-[rgba(229,72,77,.35)] bg-[rgba(229,72,77,.08)] px-3.5 py-2.5 text-[13px] text-[#f6c3c5]">
       {message}
     </div>
   );
@@ -13,7 +13,7 @@ export function FormError({ message }: { message: string | null }) {
 export function FormSuccess({ message }: { message: string | null }) {
   if (!message) return null;
   return (
-    <div role="status" className="fade-up rounded-[10px] border border-[rgba(61,220,151,.3)] bg-[rgba(61,220,151,.07)] px-3.5 py-2.5 text-[13px] text-[#c9f7e1]">
+    <div role="status" className="fade-up rounded-md border border-[rgba(63,168,120,.3)] bg-[rgba(63,168,120,.07)] px-3.5 py-2.5 text-[13px] text-[#bfe6d2]">
       {message}
     </div>
   );

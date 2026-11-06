@@ -24,7 +24,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
       <PageHeader title={`Welcome, ${user.displayName}`} subtitle="Your investigations at a glance." actions={<Link href="/dashboard/investigations/new" className="btn btn-primary"><IconPlus /> New investigation</Link>} />
       <div className="space-y-6 p-8">
         {user.email && !user.emailVerified && (
-          <div className="card-flat flex flex-wrap items-center justify-between gap-3 border-[rgba(245,196,81,.3)] p-4 text-sm">
+          <div className="card-flat flex flex-wrap items-center justify-between gap-3 border-[rgba(217,165,58,.3)] p-4 text-sm">
             <span className="text-ink-2">{welcome === "verify" ? "Account created. " : ""}Verify <b>{user.email}</b> to enable password resets.</span>
             <ResendVerification />
           </div>

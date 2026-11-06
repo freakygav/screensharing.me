@@ -9,8 +9,25 @@ public sealed record EvidenceItem(string Kind, string Source, string Reference, 
 public sealed record FindingItem(
     string Id, string RuleId, string Name, string Description, string Category, string Severity, string Tier, int Confidence,
     string Method, string WhyItMatters, string Limitations, string FalsePositiveNotes, string AlternativeExplanations,
-    DateTimeOffset DetectedAt, IReadOnlyList<EvidenceItem> Evidence)
+    DateTimeOffset DetectedAt, IReadOnlyList<EvidenceItem> Evidence, string? Family = null, string? Signature = null, string? Location = null)
 {
+    /// <summary>CONFIRMED, HIGH_CONFIDENCE, LOW_CONFIDENCE, UNABLE_TO_INSPECT or INFORMATIONAL (same rule as the server).</summary>
+    public string Outcome => RuleId == Builtin.Uninspectable ? "UNABLE_TO_INSPECT" : Tier switch
+    {
+        "CONFIRMED_ARTIFACT" => "CONFIRMED", "STRONG_INDICATOR" => "HIGH_CONFIDENCE",
+        "SUSPICIOUS_CONFIGURATION" or "WEAK_INDICATOR" => "LOW_CONFIDENCE", _ => "INFORMATIONAL",
+    };
+    public string OutcomeLabel => Outcome switch
+    {
+        "CONFIRMED" => "Confirmed", "HIGH_CONFIDENCE" => "High confidence", "LOW_CONFIDENCE" => "Low confidence",
+        "UNABLE_TO_INSPECT" => "Not inspected", _ => "Informational",
+    };
+    public bool NeedsReview => Outcome is "HIGH_CONFIDENCE" or "LOW_CONFIDENCE";
+    public string ReviewText => Outcome switch { "CONFIRMED" => "Confirmed", "HIGH_CONFIDENCE" or "LOW_CONFIDENCE" => "Manual review", _ => "-" };
+    public int OutcomeRank => Outcome switch { "CONFIRMED" => 0, "HIGH_CONFIDENCE" => 1, "LOW_CONFIDENCE" => 2, "UNABLE_TO_INSPECT" => 3, _ => 4 };
+    public string DisplayLocation => Location ?? PrimaryReference;
+    public string DisplayFamily => Family ?? "-";
+    public string DisplaySignature => Signature ?? "-";
     public string TierLabel => Tier switch
     {
         "CONFIRMED_ARTIFACT" => "Confirmed artifact", "STRONG_INDICATOR" => "Strong indicator", "SUSPICIOUS_CONFIGURATION" => "Suspicious config",
@@ -21,6 +38,8 @@ public sealed record FindingItem(
 }
 
 public sealed record CoverageItem(string Name, string Status, string? Note);
+
+public sealed record UninspectedItem(string Location, string Status, string? Reason);
 
 /// <summary>A report, either produced locally by this scan or downloaded from the server (staff view).</summary>
 public sealed class ReportModel
@@ -43,17 +62,32 @@ public sealed class ReportModel
     public List<Dictionary<string, object?>> Mods { get; init; } = [];
     public List<(DateTimeOffset At, string Action, string Target)> Custody { get; init; } = [];
     public string Source { get; init; } = "local";
+    public Dictionary<string, object?> Instance { get; init; } = [];
+    public int FilesExamined { get; init; }
+    public int FilesAnalyzed { get; init; }
+    public int FilesSkipped { get; init; }
+    public int FilesUnableToInspect { get; init; }
+    public int Signatures { get; init; }
+    public double DurationSeconds { get; init; }
+    public List<UninspectedItem> Uninspected { get; init; } = [];
+    public List<string> Excluded { get; init; } = [];
+    public int CountOutcome(string outcome) => Findings.Count(f => f.Outcome == outcome);
+    public string InstanceName => Instance.GetValueOrDefault("name")?.ToString() ?? "-";
+    public string InstanceLauncher => Instance.GetValueOrDefault("launcher")?.ToString() ?? "";
+    public string InstancePath => Instance.GetValueOrDefault("path")?.ToString() ?? "";
 
     public int Count(string severity) => Findings.Count(f => f.Severity == severity);
     public int CountTier(string tier) => Findings.Count(f => f.Tier == tier);
 
+    /// <summary>Same wording as the server (apps/website/src/lib/investigations.ts computeVerdict). Never "clean", never "cheater".</summary>
     public (string Title, string Explanation, string Level) Verdict()
     {
-        if (CountTier("CONFIRMED_ARTIFACT") > 0) return ("Confirmed artifact match", "At least one artifact matched a verified signature of a prohibited modification. Review the evidence and its timing before taking action.", "confirmed");
-        if (CountTier("STRONG_INDICATOR") > 0) return ("Strong forensic indicators", "Evidence strongly indicates a prohibited modification, but no artifact matched a verified signature. Manual review is required.", "strong");
-        if (CountTier("SUSPICIOUS_CONFIGURATION") > 0) return ("Suspicious configuration", "Configurations commonly associated with prohibited modifications or concealment were found. They have legitimate explanations; review each finding.", "suspicious");
-        if (CountTier("WEAK_INDICATOR") > 0) return ("Weak indicators only", "Only weak indicators were found. On their own they do not support a conclusion.", "review");
-        return ("No indicators found", "No examined artifact matched a detection rule. This does not prove the absence of modifications outside the examined scope.", "clear");
+        var gaps = FilesUnableToInspect > 0 ? $" {FilesUnableToInspect} file{(FilesUnableToInspect == 1 ? "" : "s")} could not be inspected." : "";
+        if (CountTier("CONFIRMED_ARTIFACT") > 0) return ("Confirmed detection", "At least one file of the instance matched a verified signature of a known cheat or prohibited modification. Review the evidence and its timing before taking action." + gaps, "confirmed");
+        if (CountTier("STRONG_INDICATOR") > 0) return ("High-confidence suspicious findings", "Evidence strongly indicates a prohibited modification, but nothing matched a verified signature. Manual review is required." + gaps, "strong");
+        if (CountTier("SUSPICIOUS_CONFIGURATION") > 0 || CountTier("WEAK_INDICATOR") > 0) return ("Low-confidence findings only", "Only weak or policy-dependent indicators were found. On their own they do not support a conclusion; review each finding." + gaps, "review");
+        var sig = Signatures > 0 ? $"the {Signatures} signatures and heuristics" : "the signature database";
+        return ("No evidence detected", $"Nothing in the examined instance matched {sig}. This is not proof that the player is clean: only the selected Minecraft instance was examined, and unknown or well-hidden modifications are not covered." + gaps, "clear");
     }
 
     public static ReportModel FromLocal(ScanResult r, InvestigationInfo inv, bool? manifestVerified) => new()
@@ -74,8 +108,18 @@ public sealed class ReportModel
             f.ClientFindingId, f.RuleId, f.Name, f.Description, f.Category, f.Severity.Api(), f.Tier.Api(), f.Confidence,
             f.Method, f.WhyItMatters, f.Limitations, f.FalsePositiveNotes, f.AlternativeExplanations, f.DetectedAt,
             f.Evidence.Select(e => new EvidenceItem(e.Kind, e.Source, e.Reference, e.Sha256, e.SizeBytes, e.CreatedTime, e.ModifiedTime, e.ObservedAt,
-                (IReadOnlyDictionary<string, string>?)e.Details ?? new Dictionary<string, string>())).ToList()))
-            .OrderBy(f => f.SeverityRank).ThenByDescending(f => f.Confidence).ToList(),
+                (IReadOnlyDictionary<string, string>?)e.Details ?? new Dictionary<string, string>())).ToList(), f.Family, f.Signature, f.Location))
+            .OrderBy(f => f.OutcomeRank).ThenBy(f => f.SeverityRank).ThenByDescending(f => f.Confidence).ToList(),
+        Instance = r.Instance.ToInventory(),
+        FilesExamined = (int)r.Inspection["examined"]!,
+        FilesAnalyzed = (int)r.Inspection["analyzed"]!,
+        FilesSkipped = (int)r.Inspection["skipped"]!,
+        FilesUnableToInspect = (int)r.Inspection["unableToInspect"]!,
+        Signatures = r.SignatureCount,
+        DurationSeconds = r.Statistics.GetValueOrDefault("durationSeconds"),
+        Uninspected = r.InspectionRecords.Where(x => x.Status is not (InspectionStatus.Analyzed or InspectionStatus.NotApplicable)).OrderBy(x => x.Location)
+            .Select(x => new UninspectedItem(x.Location, x.Status.ToString(), x.Reason)).ToList(),
+        Excluded = r.ExcludedLocations,
         Coverage = r.Coverage.Select(c => new CoverageItem(c.Name, Payloads.Status(c.Status), c.Message)).ToList(),
         Installations = r.Installations,
         Mods = r.Mods,
@@ -100,7 +144,8 @@ public sealed class ReportModel
                         ? det.EnumerateObject().ToDictionary(p => p.Name, p => p.Value.ToString()) : new Dictionary<string, string>())).ToList();
                 findings.Add(new FindingItem(Str(d, "id") ?? "", Str(d, "ruleId") ?? "", Str(d, "name") ?? "", Str(d, "description") ?? "", Str(d, "category") ?? "",
                     Str(d, "severity") ?? "INFO", Str(d, "tier") ?? "INCONCLUSIVE", d.GetProperty("confidence").GetInt32(), Str(d, "method") ?? "", Str(d, "whyItMatters") ?? "",
-                    Str(d, "limitations") ?? "", Str(d, "falsePositiveNotes") ?? "", Str(d, "alternativeExplanations") ?? "", Date(d, "detectedAt") ?? DateTimeOffset.MinValue, ev));
+                    Str(d, "limitations") ?? "", Str(d, "falsePositiveNotes") ?? "", Str(d, "alternativeExplanations") ?? "", Date(d, "detectedAt") ?? DateTimeOffset.MinValue, ev,
+                    Str(d, "family"), Str(d, "signature"), Str(d, "location")));
             }
         var coverage = new List<CoverageItem>();
         if (scan.ValueKind == JsonValueKind.Object && scan.TryGetProperty("coverage", out var cov) && cov.ValueKind == JsonValueKind.Array)
@@ -113,6 +158,18 @@ public sealed class ReportModel
             if (scan.ValueKind != JsonValueKind.Object || !scan.TryGetProperty("summary", out var sum) || sum.ValueKind != JsonValueKind.Object || !sum.TryGetProperty(key, out var arr)) return [];
             return arr.EnumerateArray().Select(o => o.EnumerateObject().ToDictionary(p => p.Name, p => (object?)p.Value.ToString())).ToList();
         }
+        JsonElement Summary() => scan.ValueKind == JsonValueKind.Object && scan.TryGetProperty("summary", out var sum) && sum.ValueKind == JsonValueKind.Object ? sum : default;
+        Dictionary<string, object?>? Obj(string key) => Summary() is { ValueKind: JsonValueKind.Object } sm && sm.TryGetProperty(key, out var o) && o.ValueKind == JsonValueKind.Object
+            ? o.EnumerateObject().ToDictionary(p => p.Name, p => (object?)p.Value.ToString()) : null;
+        int InspectionInt(string key) => Summary() is { ValueKind: JsonValueKind.Object } sm && sm.TryGetProperty("inspection", out var i) && i.ValueKind == JsonValueKind.Object
+            && i.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetInt32() : 0;
+        double Stat(string key) => Summary() is { ValueKind: JsonValueKind.Object } sm && sm.TryGetProperty("statistics", out var st) && st.ValueKind == JsonValueKind.Object
+            && st.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetDouble() : 0;
+        List<UninspectedItem> Uninspected() => Summary() is { ValueKind: JsonValueKind.Object } sm && sm.TryGetProperty("inspection", out var i) && i.ValueKind == JsonValueKind.Object
+            && i.TryGetProperty("uninspected", out var u) && u.ValueKind == JsonValueKind.Array
+            ? u.EnumerateArray().Select(x => new UninspectedItem(Str(x, "location") ?? "", Str(x, "status") ?? "", Str(x, "reason"))).ToList() : [];
+        List<string> Excluded() => Summary() is { ValueKind: JsonValueKind.Object } sm && sm.TryGetProperty("excludedLocations", out var e) && e.ValueKind == JsonValueKind.Array
+            ? e.EnumerateArray().Select(x => x.GetString() ?? "").ToList() : [];
         var custody = new List<(DateTimeOffset, string, string)>();
         if (scan.ValueKind == JsonValueKind.Object && scan.TryGetProperty("chainOfCustody", out var coc) && coc.ValueKind == JsonValueKind.Object && coc.TryGetProperty("operations", out var ops))
             custody.AddRange(ops.EnumerateArray().Select(o => (Date(o, "at") ?? DateTimeOffset.MinValue, Str(o, "action") ?? "", Str(o, "target") ?? "")));
@@ -131,8 +188,13 @@ public sealed class ReportModel
             Elevated = scan.ValueKind == JsonValueKind.Object && scan.TryGetProperty("elevated", out var el) && el.ValueKind == JsonValueKind.True,
             ManifestSha256 = scan.ValueKind == JsonValueKind.Object ? Str(scan, "manifestSha256") : null,
             ManifestVerified = scan.ValueKind == JsonValueKind.Object && scan.TryGetProperty("manifestVerified", out var mv) && mv.ValueKind is JsonValueKind.True or JsonValueKind.False ? mv.GetBoolean() : null,
-            Findings = findings.OrderBy(f => f.SeverityRank).ThenByDescending(f => f.Confidence).ToList(),
+            Findings = findings.OrderBy(f => f.OutcomeRank).ThenBy(f => f.SeverityRank).ThenByDescending(f => f.Confidence).ToList(),
             Coverage = coverage,
+            Instance = Obj("instance") ?? Inv("installations").FirstOrDefault() ?? [],
+            FilesExamined = InspectionInt("examined"), FilesAnalyzed = InspectionInt("analyzed"), FilesSkipped = InspectionInt("skipped"), FilesUnableToInspect = InspectionInt("unableToInspect"),
+            Signatures = (int)Stat("signatures"), DurationSeconds = Stat("durationSeconds"),
+            Uninspected = Uninspected(),
+            Excluded = Excluded(),
             Installations = Inv("installations"),
             Mods = Inv("mods"),
             Custody = custody,

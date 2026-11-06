@@ -1,0 +1,44 @@
+{
+  "title": "Instance artifacts",
+  "note": "Files and folders that cheat clients create inside the game directory the first time they run. Paths are relative to the instance root with forward slashes; folders are matched with a trailing slash. Each path was verified in the client's source code (see references).",
+  "defaults": {
+    "kind": "INSTANCE_PATH_REGEX",
+    "category": "Cheat client",
+    "severity": "CRITICAL",
+    "tier": "STRONG_INDICATOR",
+    "confidence": 85,
+    "weight": 60,
+    "falsePositives": "Low. The folder is created by the client's own code; another mod would have to use the same folder name. A copied instance folder carries the artifact with it.",
+    "limitations": "Shows that the client ran in this instance at some point (the folder survives uninstalling the client). It does not show when."
+  },
+  "rules": [
+    {
+      "id": "SSME-IP-0001", "name": "Meteor Client data folder in instance", "pattern": "^meteor-client/", "family": "Meteor Client",
+      "description": "The instance contains the meteor-client folder that Meteor Client creates in the game directory on start-up (MeteorClient.FOLDER).",
+      "references": ["https://github.com/MeteorDevelopment/meteor-client/blob/master/src/main/java/meteordevelopment/meteorclient/MeteorClient.java"]
+    },
+    {
+      "id": "SSME-IP-0002", "name": "Wurst Client configuration in instance", "pattern": "^wurst/(enabled-hacks|keybinds|settings|friends|windows|preferences|analytics)\\.json$", "family": "Wurst Client",
+      "description": "The instance contains Wurst's configuration files (wurst/enabled-hacks.json, keybinds.json …) written by WurstClient on start-up.",
+      "references": ["https://github.com/Wurst-Imperium/Wurst7/blob/master/src/main/java/net/wurstclient/WurstClient.java"]
+    },
+    {
+      "id": "SSME-IP-0003", "name": "LiquidBounce data folder in instance", "pattern": "(?i)^liquidbounce/", "family": "LiquidBounce",
+      "description": "The instance contains the LiquidBounce folder that LiquidBounce's ConfigSystem creates in the game directory.",
+      "references": ["https://github.com/CCBlueX/LiquidBounce/blob/nextgen/src/main/kotlin/net/ccbluex/liquidbounce/config/ConfigSystem.kt"]
+    },
+    {
+      "id": "SSME-IP-0004", "name": "BleachHack data folder in instance", "pattern": "^bleach/", "family": "BleachHack", "confidence": 75, "weight": 45,
+      "description": "The instance contains the bleach folder that BleachHack's BleachFileMang creates in the run directory.",
+      "falsePositives": "Low to moderate: the folder name is short and generic. Review its contents.",
+      "references": ["https://github.com/BleachDev/BleachHack/blob/1.19.4/src/main/java/org/bleachhack/util/io/BleachFileMang.java"]
+    },
+    {
+      "id": "SSME-IP-0005", "name": "Baritone settings in instance", "pattern": "^baritone/settings\\.txt$", "family": "Baritone",
+      "category": "Automation", "severity": "MEDIUM",
+      "description": "The instance contains baritone/settings.txt, written by Baritone's SettingsUtil, so Baritone (stand-alone or bundled in a client) has run in this instance.",
+      "falsePositives": "Baritone is allowed on some servers and in singleplayer.",
+      "references": ["https://github.com/cabaletta/baritone/blob/1.20.1/src/api/java/baritone/api/utils/SettingsUtil.java"]
+    }
+  ]
+}

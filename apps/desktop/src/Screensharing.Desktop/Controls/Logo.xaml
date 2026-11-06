@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Viewbox>
         <Canvas Width="32" Height="32">
-            <Rectangle Width="30" Height="30" Canvas.Left="1" Canvas.Top="1" RadiusX="8" RadiusY="8" Fill="{StaticResource LogoBrush}"/>
+            <Rectangle Width="30" Height="30" Canvas.Left="1" Canvas.Top="1" RadiusX="7" RadiusY="7" Fill="{StaticResource LogoBrush}"/>
             <Rectangle Width="17" Height="11" Canvas.Left="7.5" Canvas.Top="8.5" RadiusX="2" RadiusY="2" Stroke="White" StrokeThickness="2"/>
             <Line X1="12.5" Y1="24" X2="19.5" Y2="24" Stroke="White" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
             <Line X1="16" Y1="19.5" X2="16" Y2="24" Stroke="White" StrokeThickness="2"/>

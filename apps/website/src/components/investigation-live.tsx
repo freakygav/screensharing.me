@@ -138,7 +138,6 @@ function PinPanel({ snap, busy, onRegenerate }: { snap: SnapshotView; busy: bool
   const mm = Math.floor(remaining / 60000), ss = Math.floor((remaining % 60000) / 1000);
   return (
     <div className="card relative overflow-hidden px-8 py-12 text-center">
-      <div className="glow-top pointer-events-none absolute inset-x-0 top-0 h-48" />
       <div className="relative">
         <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Your investigation PIN</div>
         {expired ? (
@@ -159,9 +158,9 @@ function PinPanel({ snap, busy, onRegenerate }: { snap: SnapshotView; busy: bool
             <div className="mx-auto mt-8 max-w-md text-left text-[13px] leading-relaxed text-muted">
               <div className="font-semibold text-ink-2">Send the player these steps</div>
               <ol className="mt-2 list-decimal space-y-1 pl-5">
-                <li>Download screensharing.me.exe from <span className="font-mono text-ink-2">/download</span>.</li>
-                <li>Open it, enter PIN <span className="font-mono text-ink-2">{snap.pin!.pin}</span> and review the consent screen.</li>
-                <li>Keep Minecraft open if it is running — memory evidence only exists while the game runs.</li>
+                <li>Start the Minecraft instance you play on and leave it running.</li>
+                <li>Download screensharing.me.exe from <span className="font-mono text-ink-2">/download</span>, open it and enter PIN <span className="font-mono text-ink-2">{snap.pin!.pin}</span>.</li>
+                <li>Confirm the instance the scanner found and review the consent screen.</li>
               </ol>
             </div>
           </>
@@ -200,18 +199,41 @@ function ProgressPanel({ snap, deviceOnline }: { snap: SnapshotView; deviceOnlin
           <div className="text-xs text-dim">{snap.counts.total} findings</div>
         </div>
       </div>
-      <div className={`relative mt-5 h-2 overflow-hidden rounded-full bg-[#151925] ${running && deviceOnline ? "progress-sweep" : ""}`}>
-        <div className="h-full rounded-full bg-gradient-to-r from-[#8a6dff] to-[#4db8ff] transition-[width] duration-500" style={{ width: `${pct}%` }} />
+      {(() => {
+        const inst = scan?.summary?.instance;
+        const live = scan?.summary?.live ?? scan?.summary?.inspection;
+        if (!inst && !live) return null;
+        return (
+          <div className="mt-4 grid gap-3 rounded-md border border-line bg-bg px-4 py-3 text-[12.5px] sm:grid-cols-[1.3fr_1fr]">
+            {inst ? (
+              <div className="min-w-0">
+                <div className="eyebrow">Instance</div>
+                <div className="mt-0.5 truncate font-medium text-ink">{String(inst.name ?? "")} <span className="font-normal text-muted">· {String(inst.launcher ?? "")}</span></div>
+                <div className="mono truncate text-[11.5px] text-dim" title={String(inst.path ?? "")}>{String(inst.path ?? "")}</div>
+              </div>
+            ) : <div />}
+            {live && (
+              <div className="grid grid-cols-4 gap-2 text-center">
+                {([["Examined", live.examined], ["Analysed", live.analyzed], ["Skipped", live.skipped], ["Not inspected", live.unableToInspect]] as [string, number][]).map(([l, v]) => (
+                  <div key={l}><div className="text-[14px] font-semibold tabular-nums text-ink">{(v ?? 0).toLocaleString()}</div><div className="text-[10.5px] text-dim">{l}</div></div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })()}
+      <div className={`relative mt-5 h-1.5 overflow-hidden rounded-full bg-panel-2 ${running && deviceOnline ? "progress-sweep" : ""}`}>
+        <div className="h-full rounded-full bg-accent transition-[width] duration-500" style={{ width: `${pct}%` }} />
       </div>
       {running && !deviceOnline && (
-        <div className="mt-4 flex items-center gap-2 rounded-[10px] border border-[rgba(245,196,81,.3)] bg-[rgba(245,196,81,.06)] px-3 py-2 text-[13px] text-[#fbe7b0]">
+        <div className="mt-4 flex items-center gap-2 rounded-md border border-[rgba(217,165,58,.3)] bg-[rgba(217,165,58,.07)] px-3 py-2 text-[13px] text-[#efd9a6]">
           <IconAlert size={14} /> Connection to the desktop was lost. Findings are queued on the player&apos;s machine and will upload when it reconnects.
         </div>
       )}
       {scan && (
         <div className="mt-6 grid gap-2 sm:grid-cols-2">
           {scan.categories.map((c) => (
-            <div key={c.key} className="flex items-center gap-3 rounded-[10px] border border-line bg-[#0a0c12] px-3 py-2.5">
+            <div key={c.key} className="flex items-center gap-3 rounded-md border border-line bg-bg px-3 py-2.5">
               <div className="flex h-6 w-6 shrink-0 items-center justify-center">
                 {c.status === "RUNNING" ? <Spinner className="border-white/15 border-t-accent" /> : CAT_ICON[c.status] ?? <span className="h-1.5 w-1.5 rounded-full bg-dim" />}
               </div>
@@ -225,7 +247,7 @@ function ProgressPanel({ snap, deviceOnline }: { snap: SnapshotView; deviceOnlin
       )}
       <div className="mt-6 grid grid-cols-5 gap-2">
         {(["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"] as const).map((s) => (
-          <div key={s} className="rounded-[10px] border border-line bg-[#0a0c12] px-3 py-2.5">
+          <div key={s} className="rounded-md border border-line bg-bg px-3 py-2.5">
             <div className="text-[10.5px] font-semibold tracking-wider text-dim">{s}</div>
             <div className={`mt-1 text-lg font-bold tabular-nums ${s === "CRITICAL" && snap.counts.severity[s] ? "text-crit" : s === "HIGH" && snap.counts.severity[s] ? "text-high" : ""}`}>{snap.counts.severity[s] ?? 0}</div>
           </div>
@@ -246,7 +268,7 @@ function DevicePanel({ snap, online, busy, onReissue }: { snap: SnapshotView; on
           <Row k="Connection" v={<span className={online ? "text-ok" : "text-med"}>{online ? "Online" : `Offline · last seen ${fmtRelative(d.lastHeartbeatAt)}`}</span>} />
           <Row k="App version" v={<span className="font-mono">{d.appVersion}</span>} />
           <Row k="Windows" v={d.osVersion ?? "—"} />
-          <Row k="Administrator" v={d.elevated ? "Yes" : "No — some checks skipped"} />
+          <Row k="Administrator" v={d.elevated ? "Yes" : "No — not required"} />
           <Row k="Connected" v={fmtDate(d.connectedAt)} />
           <Row k="Consent" v={snap.consentedAt ? fmtDate(snap.consentedAt) : "Pending"} />
         </dl>

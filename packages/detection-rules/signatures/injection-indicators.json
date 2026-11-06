@@ -1,0 +1,272 @@
+{
+  "title": "Generic injection and evasion indicators",
+  "note": "Strings that are harmless on their own but suspicious in combination. Rules with classification `indicator` are scored together per file: a finding is only reported when the summed weight reaches 30, and these families are never reported as confirmed.",
+  "defaults": {
+    "kind": "STRING",
+    "classification": "indicator",
+    "tier": "WEAK_INDICATOR",
+    "falsePositives": "Each string has legitimate uses; only combinations are reported, and never as proof.",
+    "limitations": "Packed or encrypted binaries hide their imports; absence of these strings proves nothing."
+  },
+  "rules": [
+    {
+      "id": "SSME-IJ-0001",
+      "name": "Remote thread creation API",
+      "pattern": "CreateRemoteThread",
+      "family": "Native injector (generic)",
+      "category": "Injection",
+      "severity": "HIGH",
+      "confidence": 55,
+      "weight": 25,
+      "scopes": [
+        "binary"
+      ],
+      "description": "The binary imports CreateRemoteThread, the classic API for running code inside another process."
+    },
+    {
+      "id": "SSME-IJ-0002",
+      "name": "Remote memory allocation API",
+      "pattern": "VirtualAllocEx",
+      "family": "Native injector (generic)",
+      "category": "Injection",
+      "severity": "HIGH",
+      "confidence": 55,
+      "weight": 25,
+      "scopes": [
+        "binary"
+      ],
+      "description": "The binary imports VirtualAllocEx, used to allocate memory inside another process."
+    },
+    {
+      "id": "SSME-IJ-0003",
+      "name": "Remote memory write API",
+      "pattern": "WriteProcessMemory",
+      "family": "Native injector (generic)",
+      "category": "Injection",
+      "severity": "HIGH",
+      "confidence": 55,
+      "weight": 25,
+      "scopes": [
+        "binary"
+      ],
+      "description": "The binary imports WriteProcessMemory, used to write code or data into another process."
+    },
+    {
+      "id": "SSME-IJ-0004",
+      "name": "Undocumented thread creation API",
+      "pattern": "NtCreateThreadEx",
+      "family": "Native injector (generic)",
+      "category": "Injection",
+      "severity": "HIGH",
+      "confidence": 55,
+      "weight": 30,
+      "scopes": [
+        "binary"
+      ],
+      "description": "The binary references NtCreateThreadEx, an undocumented API used by injectors to bypass CreateRemoteThread monitoring."
+    },
+    {
+      "id": "SSME-IJ-0005",
+      "name": "Attach to running Java VM from native code",
+      "pattern": "JNI_GetCreatedJavaVMs",
+      "family": "Native injector (generic)",
+      "category": "Injection",
+      "severity": "HIGH",
+      "confidence": 60,
+      "weight": 40,
+      "scopes": [
+        "binary"
+      ],
+      "description": "The binary calls JNI_GetCreatedJavaVMs, which native code injected into javaw.exe uses to obtain the game's JVM and load cheat classes into it."
+    },
+    {
+      "id": "SSME-IJ-0006",
+      "name": "JVM tool interface agent entry point",
+      "pattern": "Agent_OnAttach",
+      "family": "Native injector (generic)",
+      "category": "Injection",
+      "severity": "HIGH",
+      "confidence": 55,
+      "weight": 30,
+      "scopes": [
+        "binary"
+      ],
+      "description": "The binary exports Agent_OnAttach, the entry point of a native JVMTI agent that can be attached to a running game."
+    },
+    {
+      "id": "SSME-IJ-0010",
+      "name": "Runtime class redefinition",
+      "pattern": "redefineClasses",
+      "family": "Runtime class redefinition (generic)",
+      "category": "Injection",
+      "severity": "MEDIUM",
+      "confidence": 40,
+      "weight": 20,
+      "scopes": [
+        "class"
+      ],
+      "description": "Compiled classes call Instrumentation.redefineClasses, which rewrites already loaded game classes at runtime."
+    },
+    {
+      "id": "SSME-IJ-0011",
+      "name": "Instrumentation API usage",
+      "pattern": "java/lang/instrument/Instrumentation",
+      "family": "Runtime class redefinition (generic)",
+      "category": "Injection",
+      "severity": "MEDIUM",
+      "confidence": 40,
+      "weight": 15,
+      "scopes": [
+        "class"
+      ],
+      "description": "Compiled classes use the java.lang.instrument API, which Java agents use to transform game classes."
+    },
+    {
+      "id": "SSME-IJ-0012",
+      "name": "Dynamic agent attach API",
+      "pattern": "com/sun/tools/attach/VirtualMachine",
+      "family": "Runtime class redefinition (generic)",
+      "category": "Injection",
+      "severity": "MEDIUM",
+      "confidence": 45,
+      "weight": 25,
+      "scopes": [
+        "class"
+      ],
+      "description": "Compiled classes use the Attach API to load an agent into a running JVM — the mechanism of Java-based injectors."
+    },
+    {
+      "id": "SSME-IJ-0020",
+      "name": "Global input hook library (JNativeHook)",
+      "pattern": "com/github/kwhat/jnativehook",
+      "family": "Global input hooks (JNativeHook)",
+      "category": "Automation",
+      "severity": "MEDIUM",
+      "confidence": 40,
+      "weight": 30,
+      "scopes": [
+        "class"
+      ],
+      "description": "The archive bundles JNativeHook, which gives Java programs global mouse and keyboard hooks and is the basis of most Java auto-clickers.",
+      "falsePositives": "Hotkey and overlay mods also use global hooks."
+    },
+    {
+      "id": "SSME-IJ-0021",
+      "name": "Synthetic mouse input from Java",
+      "pattern": "java/awt/Robot",
+      "family": "Global input hooks (JNativeHook)",
+      "category": "Automation",
+      "severity": "MEDIUM",
+      "confidence": 35,
+      "weight": 15,
+      "scopes": [
+        "class"
+      ],
+      "description": "Compiled classes use java.awt.Robot, which generates synthetic mouse clicks and key presses."
+    },
+    {
+      "id": "SSME-LB-0001",
+      "kind": "LIBRARY_PACKAGE",
+      "name": "Mixin (SpongePowered)",
+      "pattern": "org/spongepowered/",
+      "category": "Library",
+      "severity": "INFO",
+      "tier": "INCONCLUSIVE",
+      "confidence": 0,
+      "classification": null,
+      "description": "The Mixin framework ships an optional Java agent (org.spongepowered.tools.agent) that uses instrumentation for hot-swapping during development. Its classes are exempt from indicator scoring."
+    },
+    {
+      "id": "SSME-LB-0002",
+      "kind": "LIBRARY_PACKAGE",
+      "name": "Byte Buddy",
+      "pattern": "net/bytebuddy/",
+      "category": "Library",
+      "severity": "INFO",
+      "tier": "INCONCLUSIVE",
+      "confidence": 0,
+      "classification": null,
+      "description": "Byte Buddy is a code-generation library with an agent installer. Its classes are exempt from indicator scoring."
+    },
+    {
+      "id": "SSME-LB-0003",
+      "kind": "LIBRARY_PACKAGE",
+      "name": "Kotlin coroutines debug agent",
+      "pattern": "kotlinx/coroutines/debug/",
+      "category": "Library",
+      "severity": "INFO",
+      "tier": "INCONCLUSIVE",
+      "confidence": 0,
+      "classification": null,
+      "description": "The kotlinx.coroutines debug agent uses instrumentation. Its classes are exempt from indicator scoring."
+    },
+    {
+      "id": "SSME-LB-0004",
+      "kind": "LIBRARY_PACKAGE",
+      "name": "Fabric Loader",
+      "pattern": "net/fabricmc/loader/",
+      "category": "Library",
+      "severity": "INFO",
+      "tier": "INCONCLUSIVE",
+      "confidence": 0,
+      "classification": null,
+      "description": "Fabric Loader's own classes are exempt from indicator scoring."
+    },
+    {
+      "id": "SSME-LB-0005",
+      "kind": "LIBRARY_PACKAGE",
+      "name": "ObjectWeb ASM",
+      "pattern": "org/objectweb/asm/",
+      "category": "Library",
+      "severity": "INFO",
+      "tier": "INCONCLUSIVE",
+      "confidence": 0,
+      "classification": null,
+      "description": "The ASM bytecode library is exempt from indicator scoring."
+    },
+    {
+      "id": "SSME-LB-0006",
+      "kind": "LIBRARY_PACKAGE",
+      "name": "Spark profiler",
+      "pattern": "me/lucko/spark/",
+      "category": "Library",
+      "severity": "INFO",
+      "tier": "INCONCLUSIVE",
+      "confidence": 0,
+      "classification": null,
+      "description": "The spark profiler attaches profiling agents. Its classes are exempt from indicator scoring."
+    },
+    {
+      "id": "SSME-OB-0001",
+      "name": "Allatori obfuscator watermark",
+      "pattern": "ALLATORIxDEMO",
+      "family": "Commercial obfuscation (Allatori)",
+      "category": "Obfuscation",
+      "severity": "LOW",
+      "confidence": 35,
+      "weight": 30,
+      "scopes": [
+        "class",
+        "resource"
+      ],
+      "description": "The archive was processed with the demo edition of the Allatori obfuscator, which leaves this watermark in encrypted string constants. Paid cheat clients are commonly obfuscated.",
+      "falsePositives": "Some legitimate closed-source mods are obfuscated."
+    },
+    {
+      "id": "SSME-IJ-0030",
+      "name": "Java agent in a script or configuration",
+      "pattern": "-javaagent:",
+      "family": "Java agent launch (generic)",
+      "category": "Injection",
+      "severity": "MEDIUM",
+      "confidence": 45,
+      "weight": 30,
+      "scopes": [
+        "script",
+        "config"
+      ],
+      "description": "A script or configuration file inside the instance passes -javaagent to Java, i.e. it starts Java with an instrumentation agent that can rewrite game classes.",
+      "falsePositives": "Launcher configuration files that legitimately configure a profiler or the launcher's own agent."
+    }
+  ]
+}

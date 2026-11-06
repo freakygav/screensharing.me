@@ -1,9 +1,9 @@
 const SEV: Record<string, string> = {
-  CRITICAL: "text-[#ffd4dc] bg-[rgba(255,77,106,.14)] border-[rgba(255,77,106,.4)]",
-  HIGH: "text-[#ffd9c4] bg-[rgba(255,138,76,.12)] border-[rgba(255,138,76,.35)]",
-  MEDIUM: "text-[#fbe7b0] bg-[rgba(245,196,81,.1)] border-[rgba(245,196,81,.32)]",
-  LOW: "text-[#cbe9ff] bg-[rgba(77,184,255,.1)] border-[rgba(77,184,255,.3)]",
-  INFO: "text-muted bg-[#121620] border-line",
+  CRITICAL: "text-[#f6c3c5] bg-[rgba(229,72,77,.12)] border-[rgba(229,72,77,.4)]",
+  HIGH: "text-[#f7cdb8] bg-[rgba(239,122,69,.1)] border-[rgba(239,122,69,.35)]",
+  MEDIUM: "text-[#efd9a6] bg-[rgba(217,165,58,.09)] border-[rgba(217,165,58,.3)]",
+  LOW: "text-[#cbd3e3] bg-[rgba(125,143,176,.1)] border-[rgba(125,143,176,.3)]",
+  INFO: "text-muted bg-panel-2 border-line",
 };
 export const SEV_DOT: Record<string, string> = { CRITICAL: "bg-crit", HIGH: "bg-high", MEDIUM: "bg-med", LOW: "bg-low", INFO: "bg-info" };
 
@@ -19,9 +19,29 @@ export const TIER_LABEL: Record<string, string> = {
   INCONCLUSIVE: "Inconclusive",
 };
 
+export const OUTCOME_LABEL: Record<string, string> = {
+  CONFIRMED: "Confirmed",
+  HIGH_CONFIDENCE: "High confidence",
+  LOW_CONFIDENCE: "Low confidence",
+  UNABLE_TO_INSPECT: "Not inspected",
+  INFORMATIONAL: "Informational",
+};
+const OUTCOME_CLS: Record<string, string> = {
+  CONFIRMED: "text-[#f6c3c5] border-[rgba(229,72,77,.4)] bg-[rgba(229,72,77,.12)]",
+  HIGH_CONFIDENCE: "text-[#f7cdb8] border-[rgba(239,122,69,.35)] bg-[rgba(239,122,69,.1)]",
+  LOW_CONFIDENCE: "text-[#efd9a6] border-[rgba(217,165,58,.3)] bg-[rgba(217,165,58,.08)]",
+  UNABLE_TO_INSPECT: "text-ink-2 border-line-strong",
+  INFORMATIONAL: "",
+};
+
+/** Confirmed vs. needs-manual-review, the distinction investigators act on. */
+export function OutcomeBadge({ outcome }: { outcome: string }) {
+  return <span className={`chip ${OUTCOME_CLS[outcome] ?? ""}`}>{OUTCOME_LABEL[outcome] ?? outcome}</span>;
+}
+
 export function TierBadge({ tier }: { tier: string }) {
   const strong = tier === "CONFIRMED_ARTIFACT" || tier === "STRONG_INDICATOR";
-  return <span className={`chip ${strong ? "border-[rgba(124,92,255,.4)] text-[#d8ceff] bg-[rgba(124,92,255,.12)]" : ""}`}>{TIER_LABEL[tier] ?? tier}</span>;
+  return <span className={`chip ${strong ? "chip-accent" : ""}`}>{TIER_LABEL[tier] ?? tier}</span>;
 }
 
 const STATUS: Record<string, { label: string; cls: string; dot?: string }> = {

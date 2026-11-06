@@ -1,0 +1,145 @@
+{
+  "title": "Utility and automation modifications",
+  "note": "Mods that are legitimate in some contexts but commonly prohibited on PvP servers.",
+  "rules": [
+    {
+      "id": "SSME-UT-0016",
+      "name": "Baritone pathing/automation bot",
+      "kind": "MOD_ID",
+      "pattern": "baritone",
+      "category": "Automation",
+      "severity": "MEDIUM",
+      "tier": "CONFIRMED_ARTIFACT",
+      "confidence": 95,
+      "description": "Baritone, a bot that automates walking, mining and building, is installed.",
+      "falsePositives": "Baritone is legitimate on singleplayer and on servers that allow it. The finding confirms installation, not misuse.",
+      "limitations": "Cannot determine which server it was used on.",
+      "family": "Baritone",
+      "features": [
+        "Automated pathing",
+        "Automated mining",
+        "Build automation"
+      ],
+      "references": [
+        "https://github.com/cabaletta/baritone/blob/1.20.1/fabric/src/main/resources/fabric.mod.json"
+      ]
+    },
+    {
+      "id": "SSME-UT-0017",
+      "name": "Baritone classes bundled in archive",
+      "kind": "PACKAGE_PREFIX",
+      "pattern": "baritone/api/",
+      "category": "Automation",
+      "severity": "MEDIUM",
+      "tier": "CONFIRMED_ARTIFACT",
+      "confidence": 92,
+      "description": "A Java archive contains the Baritone API classes (Baritone may be bundled inside another client, e.g. Meteor's Baritone build).",
+      "falsePositives": "Baritone is allowed on some servers and in singleplayer.",
+      "limitations": "Presence only.",
+      "family": "Baritone",
+      "features": [
+        "Automated pathing",
+        "Automated mining"
+      ],
+      "references": [
+        "https://github.com/cabaletta/baritone"
+      ]
+    },
+    {
+      "id": "SSME-UT-0018",
+      "name": "Freecam modification",
+      "kind": "MOD_ID",
+      "pattern": "freecam",
+      "category": "Utility modification",
+      "severity": "MEDIUM",
+      "tier": "CONFIRMED_ARTIFACT",
+      "confidence": 90,
+      "description": "A freecam mod is installed. Freecam lets the camera leave the player's body and look through terrain from new angles.",
+      "falsePositives": "Freecam is permitted on many servers and widely used for building and screenshots.",
+      "limitations": "Server policy determines whether this is a violation. Presence on disk does not prove use on the server.",
+      "family": "Freecam",
+      "features": [
+        "Freecam (detached camera — can reveal hidden bases and players)"
+      ],
+      "references": [
+        "https://modrinth.com/mod/freecam"
+      ]
+    },
+    {
+      "id": "SSME-UT-0019",
+      "name": "X-ray modification (name/metadata)",
+      "kind": "MOD_ID_REGEX",
+      "pattern": "(?i)(^|[^a-z])x[-_ ]?ray",
+      "category": "Utility modification",
+      "severity": "HIGH",
+      "tier": "SUSPICIOUS_CONFIGURATION",
+      "confidence": 75,
+      "description": "A mod whose id or name contains \"xray\" is installed. X-ray mods render ores and hidden blocks through terrain.",
+      "falsePositives": "Mods with xray in the name may be anti-xray tools for server owners, or utilities for singleplayer/creative.",
+      "limitations": "Name-based. Requires manual review of the mod.",
+      "family": "X-ray",
+      "features": [
+        "X-ray (seeing ores through blocks)"
+      ]
+    },
+    {
+      "id": "SSME-UT-0020",
+      "name": "X-ray resource pack",
+      "kind": "RESOURCEPACK_REGEX",
+      "pattern": "(?i)x[-_ ]?ray",
+      "category": "Utility modification",
+      "severity": "MEDIUM",
+      "tier": "SUSPICIOUS_CONFIGURATION",
+      "confidence": 65,
+      "description": "A resource pack whose name contains \"xray\" is present. X-ray texture packs make stone transparent so ores are visible.",
+      "falsePositives": "Pack names are user-controlled; a pack may be mis-named or unused.",
+      "limitations": "Only checks the pack file/folder name, not whether the pack was active.",
+      "family": "X-ray",
+      "features": [
+        "X-ray via transparent block textures"
+      ]
+    },
+    {
+      "id": "SSME-UT-0078",
+      "name": "Tweakeroo (gameplay tweaks incl. freecam/fast placement)",
+      "kind": "MOD_ID",
+      "pattern": "tweakeroo",
+      "category": "Gameplay modification",
+      "severity": "LOW",
+      "tier": "SUSPICIOUS_CONFIGURATION",
+      "confidence": 60,
+      "description": "Tweakeroo is installed. It contains optional features (freecam, fast block placement) that many PvP servers prohibit.",
+      "falsePositives": "Tweakeroo is a popular, legitimate technical-play mod; most features are harmless.",
+      "limitations": "Cannot see which tweaks were enabled unless its config is reviewed manually.",
+      "family": "Tweakeroo",
+      "features": [
+        "Freecam",
+        "Flexible block placement",
+        "Fast right click"
+      ],
+      "references": [
+        "https://github.com/maruohon/tweakeroo"
+      ]
+    },
+    {
+      "id": "SSME-UT-0079",
+      "name": "Item Scroller (inventory automation)",
+      "kind": "MOD_ID",
+      "pattern": "itemscroller",
+      "category": "Gameplay modification",
+      "severity": "LOW",
+      "tier": "SUSPICIOUS_CONFIGURATION",
+      "confidence": 55,
+      "description": "Item Scroller automates inventory item movement and crafting.",
+      "falsePositives": "Widely allowed on survival servers; usually only prohibited in competitive PvP.",
+      "limitations": "Presence only.",
+      "family": "Item Scroller",
+      "features": [
+        "Inventory automation"
+      ],
+      "references": [
+        "https://github.com/maruohon/itemscroller"
+      ]
+    }
+  ]
+}

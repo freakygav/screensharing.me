@@ -1,5 +1,37 @@
 # Research
 
+## 2026-11-06 (revision 2): instance-scoped scanning and the signature engine
+
+### andreaonorato/Minecraft-Cheat-Scanner — `Strings Scanner.c`
+A 23-entry table of `{string, client}` pairs matched line-by-line (`strstr`) against a text dump of `javaw.exe` memory strings that the user
+exports manually from Process Hacker. It targets 1.7/1.8-era injection ("ghost") clients (Vape 2.x/Lite, Drek, Gucci, Merge, Zuiy…) plus
+JNativeHook as an auto-clicker marker. Observations:
+* The approach — distinctive strings in the game process — is sound and is what our memory stage does automatically (read-only `ReadProcessMemory`, UTF-8 and UTF-16, Aho–Corasick).
+* The list is unverifiable today and several entries are 4–7 characters (`nG@W`, `kc((k`, `hi.a2`…), which match by chance in gigabytes of memory. We adopted only the 14 entries of 8+ characters, as **weak, community-sourced** rules (`signatures/injection-clients.json`), also applied to class constant pools and binaries in the instance. The rejected entries are listed in DETECTION_CATALOG.md.
+* `com/sun/jna/z/Main` is a useful structural idea: a cheat hiding inside a legitimate library's namespace. Our impersonation check generalises it for mods (declared id of a known mod without that mod's packages).
+* It stops at the first match and prints a verdict; we report every match with its evidence and never turn a single weak string into a verdict.
+
+### Running launchers (observed on this machine)
+The Modrinth App starts `javaw.exe … -Dminecraft.launcher.brand=theseus -cp …\Temp\.tmpXXXX\theseus.jar;…\meta\libraries\…;…\meta\versions\<id>\<id>.jar com.modrinth.theseus.MinecraftLaunch net.fabricmc.loader.impl.launch.knot.KnotClient … --gameDir "…\ModrinthApp\profiles\<name>"`. Prism/MultiMC start `org.prismlauncher.EntryPoint` in the instance's `.minecraft` folder and pass launch parameters on standard input, so the game directory must be read from the process's working directory. These shaped `InstanceResolver`.
+
+### Real artifacts that changed the design
+* **X-ray packs no longer make textures transparent.** `Xray_Ultimate 26.X` redirects stone, dirt, deepslate, netherrack… through blockstates to models made of 0.5-pixel edge slabs with full light emission. The X-ray check therefore resolves blockstate → model → parent chain inside the pack and measures geometry, in addition to decoding PNG alpha.
+* **"Anti-unzip" archives.** Server resource packs in the Modrinth download cache zero the entry counts and set "disk 65535" in the ZIP end record; Java ignores those fields, .NET refuses them. The same trick could shield a cheat jar, so archives are normalised in memory and inspected anyway.
+* **Vanilla words in memory.** `Scaffold`(ing), `Spider` and `Surround` are ordinary game strings; only distinctive compound feature names are searched in memory now.
+
+### Client artifacts verified in source (instance folders)
+`meteor-client/` (MeteorClient.FOLDER), `wurst/*.json` (WurstClient), `LiquidBounce/` (ConfigSystem), `bleach/` (BleachFileMang), `baritone/settings.txt` (SettingsUtil); mixin configurations `meteor-client.mixins.json`, `wurst.mixins.json`, `liquidbounce.mixins.json` (fabric.mod.json).
+
+### Visual references
+anticheat.ac: near-black neutral surfaces (`#090A0B`, panels ≈ `#161616`), hairline borders (~10 % white), one blue accent (`#3A63EC`), result classes *Detect / Warning / Suspicious*. Our redesign uses the same restraint with its own palette (graphite `#0B0C0E`/`#131416`, accent `#4C74E8`, 6–8 px radii, no gradients or glows). detect.ac/tools sits behind a bot-verification page that blocks automated clients; it was not bypassed and not used.
+
+### Scope decision
+The system-wide collectors of revision 1 (Prefetch, BAM, Recycle Bin, USN journal, event logs, services, all Java installations) were removed from the scanner: they read Windows records outside the instance. Their rules are disabled in the catalog (kept for old reports).
+
+---
+
+## Revision 1 (initial build)
+
 Research performed on 2026-11-06 before and during implementation. Sources were read and analysed; **no third-party script or binary was executed**.
 
 ## 1. Reference platforms

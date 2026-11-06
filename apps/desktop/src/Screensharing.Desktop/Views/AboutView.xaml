@@ -7,7 +7,7 @@
             <StackPanel Orientation="Horizontal">
                 <c:Logo Width="48" Height="48"/>
                 <StackPanel Margin="16,0,0,0" VerticalAlignment="Center">
-                    <TextBlock Style="{StaticResource H1}"><Run Text="screensharing"/><Run Text=".me" Foreground="{StaticResource Accent2}"/></TextBlock>
+                    <TextBlock Style="{StaticResource H1}"><Run Text="screensharing"/><Run Text=".me" Foreground="{StaticResource Muted}"/></TextBlock>
                     <TextBlock Style="{StaticResource MutedText}" Text="Minecraft forensic investigation client"/>
                 </StackPanel>
             </StackPanel>
@@ -26,13 +26,13 @@
             <Border Style="{StaticResource Card}" Margin="0,14,0,0">
                 <StackPanel>
                     <TextBlock Text="How your data is handled" Style="{StaticResource H2}" FontSize="15"/>
-                    <TextBlock Style="{StaticResource Body}" Margin="0,8,0,0" Text="Nothing is collected before you consent. The scan is read-only: files are opened with shared read access and never modified, moved, executed or deleted. Only findings, file hashes, file metadata and an inventory of Minecraft components are sent to the investigator over an authenticated connection. Browser data, passwords, launcher account tokens and personal documents are never read; session tokens on Java command lines are redacted."/>
+                    <TextBlock Style="{StaticResource Body}" Margin="0,8,0,0" Text="Nothing is collected before you consent. Only the Minecraft instance you select is examined: its folder, the game files it loads and the running game process. Files are opened with shared read access and never modified, moved, executed or deleted. Other instances, documents, browser data, passwords, account tokens and Windows records are never read. Findings, file hashes and the instance path are sent to the investigator over an authenticated connection."/>
                 </StackPanel>
             </Border>
             <Border Style="{StaticResource Card}" Margin="0,14,0,0">
                 <StackPanel>
                     <TextBlock Text="Limitations" Style="{StaticResource H2}" FontSize="15"/>
-                    <TextBlock Style="{StaticResource Body}" Margin="0,8,0,0" Text="Closed-source injected clients publish no identifiers and are only detectable through indirect evidence. Memory evidence exists only while the game runs. Prefetch, BAM and the change journal require administrator rights. File names never exceed the suspicious tier on their own, and an empty report does not prove the absence of modifications outside the examined scope."/>
+                    <TextBlock Style="{StaticResource Body}" Margin="0,8,0,0" Text="Only the selected instance is examined, so cheats kept or run elsewhere are not covered unless they are loaded into the game. Closed-source clients publish no identifiers and are detected through indirect evidence. Memory evidence exists only while the game runs. File names never exceed the low-confidence tier on their own, and an empty report means no evidence was detected, not that the player is clean."/>
                 </StackPanel>
             </Border>
             <TextBlock Style="{StaticResource MutedText}" FontSize="11.5" Margin="0,16,0,0" Text="PDF reports are generated with QuestPDF (Community License). © 2026 screensharing.me"/>

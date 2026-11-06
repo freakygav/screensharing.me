@@ -53,6 +53,9 @@ export const POST = handler(async (req: Request) => {
       limitations: f.limitations,
       falsePositiveNotes: f.falsePositiveNotes,
       alternativeExplanations: f.alternativeExplanations,
+      family: f.family ?? null,
+      signature: f.signature ?? null,
+      location: f.location ?? null,
       detectedAt: new Date(f.detectedAt),
     });
     f.evidence.forEach((e, position) =>

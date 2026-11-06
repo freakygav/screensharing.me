@@ -10,7 +10,15 @@ public static class MemoryScanner
 
     public static unsafe Result Scan(int pid, IReadOnlyList<string> patterns, long capBytes, TimeSpan timeBudget, CancellationToken ct)
     {
-        var ac = new AhoCorasick(patterns);
+        // Each pattern is searched as UTF-8 (JVM class names, modified UTF-8 constants) and UTF-16LE (java.lang.String contents).
+        var bytes = new List<byte[]>();
+        var owner = new List<string>();
+        foreach (var p in patterns)
+        {
+            bytes.Add(System.Text.Encoding.UTF8.GetBytes(p)); owner.Add(p);
+            bytes.Add(System.Text.Encoding.Unicode.GetBytes(p)); owner.Add(p);
+        }
+        var ac = new AhoCorasick(bytes);
         var hits = new Dictionary<string, (long, string)>();
         using var h = Native.OpenProcess(Native.PROCESS_QUERY_INFORMATION | Native.PROCESS_VM_READ, false, pid);
         if (h.IsInvalid) return new Result(hits, 0, 0, false, $"OpenProcess failed (error {System.Runtime.InteropServices.Marshal.GetLastPInvokeError()})");
@@ -43,7 +51,7 @@ public static class MemoryScanner
                     {
                         if (!Native.ReadProcessMemory(h, mbi.BaseAddress + (nint)offset, p, len, out var read) || read == 0) break;
                         foreach (var (idx, pos) in ac.Search(buffer.AsSpan(0, (int)read)))
-                            hits.TryAdd(patterns[idx], (mbi.BaseAddress + (nint)offset + pos, $"0x{mbi.BaseAddress:X} ({(mbi.Type == Native.MEM_PRIVATE ? "private" : "mapped")})"));
+                            hits.TryAdd(owner[idx], (mbi.BaseAddress + (nint)offset + pos, $"0x{mbi.BaseAddress:X} ({(mbi.Type == Native.MEM_PRIVATE ? "private" : "mapped")})"));
                         scanned += read;
                     }
                     offset += chunk;

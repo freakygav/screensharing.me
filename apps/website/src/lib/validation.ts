@@ -51,6 +51,10 @@ const shortText = (max: number) => z.string().max(max);
 export const SEVERITIES = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"] as const;
 export const TIERS = ["CONFIRMED_ARTIFACT", "STRONG_INDICATOR", "SUSPICIOUS_CONFIGURATION", "WEAK_INDICATOR", "INCONCLUSIVE"] as const;
 export const CATEGORY_STATUSES = ["PENDING", "RUNNING", "COMPLETED", "SKIPPED", "FAILED"] as const;
+/** Rule kinds understood by the scanner (packages/detection-rules/build-rules.mjs). */
+export const RULE_KINDS = ["MOD_ID", "MOD_ID_REGEX", "PACKAGE_PREFIX", "STRING", "MEMORY_STRING", "SHA256", "INSTANCE_PATH_REGEX", "EXECUTABLE_REGEX",
+  "FILE_NAME_REGEX", "RESOURCEPACK_REGEX", "SHADERPACK_REGEX", "FEATURE_NAME", "MODULE_PACKAGE", "KNOWN_MOD", "LIBRARY_PACKAGE", "BUILTIN"] as const;
+export const RULE_SCOPES = ["class", "resource", "config", "log", "script", "binary", "memory"] as const;
 const isoDate = z.string().datetime({ offset: true });
 const categoryKey = z.string().regex(/^[a-z][a-z0-9_]{1,31}$/);
 const semver = z.string().regex(/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]{1,32})?$/, "Invalid version.");
@@ -76,9 +80,21 @@ export const scanStartSchema = z.object({
     .array(z.object({ key: categoryKey, name: shortText(80) }))
     .min(1)
     .max(30),
+  instance: z.record(z.string().max(64), z.union([z.string().max(1024), z.number(), z.boolean(), z.null()])).optional(),
+});
+
+const liveFiles = z.object({
+  examined: z.number().int().min(0),
+  analyzed: z.number().int().min(0),
+  skipped: z.number().int().min(0),
+  unableToInspect: z.number().int().min(0),
+  findings: z.number().int().min(0).optional(),
+  elapsedSeconds: z.number().min(0).optional(),
+  stage: shortText(80).optional(),
 });
 
 export const scanProgressSchema = z.object({
+  files: liveFiles.optional(),
   progress: z.number().int().min(0).max(100),
   currentActivity: shortText(200).optional(),
   categories: z
@@ -129,6 +145,9 @@ export const findingSchema = z
     limitations: shortText(2000),
     falsePositiveNotes: shortText(2000),
     alternativeExplanations: shortText(2000),
+    family: shortText(120).optional().nullable(),
+    signature: shortText(300).optional().nullable(),
+    location: shortText(500).optional().nullable(),
     detectedAt: isoDate,
     evidence: z.array(evidenceSchema).min(1).max(25),
   })
@@ -147,6 +166,16 @@ export const scanCompleteSchema = z.object({
     mods: z.array(inventoryItem).max(3000),
     javaRuntimes: z.array(inventoryItem).max(100),
     statistics: z.record(z.string().max(64), z.number()).optional(),
+    instance: inventoryItem.optional(),
+    inspection: z.object({
+      examined: z.number().int().min(0),
+      analyzed: z.number().int().min(0),
+      skipped: z.number().int().min(0),
+      unableToInspect: z.number().int().min(0),
+      byStatus: z.record(z.string().max(40), z.number().int().min(0)).optional(),
+      uninspected: z.array(z.object({ location: shortText(1024), status: shortText(40), reason: shortText(500).optional().nullable() })).max(300).optional(),
+    }).optional(),
+    excludedLocations: z.array(shortText(300)).max(100).optional(),
   }),
   coverage: z.array(
     z.object({ key: categoryKey, name: shortText(80), status: z.enum(CATEGORY_STATUSES), note: shortText(500).optional().nullable() }),
@@ -177,7 +206,7 @@ export const ruleSchema = z.object({
   name: shortText(200).min(1),
   description: shortText(2000).min(1),
   category: shortText(80).min(1),
-  kind: z.enum(["MOD_ID", "MOD_ID_REGEX", "PACKAGE_PREFIX", "MEMORY_STRING", "SHA256", "EXECUTABLE_REGEX", "FILE_NAME_REGEX", "RESOURCEPACK_REGEX", "KNOWN_MOD", "BUILTIN"]),
+  kind: z.enum(RULE_KINDS),
   pattern: shortText(500).min(1),
   family: shortText(80).optional().nullable(),
   features: z.array(shortText(120)).max(40).default([]),
@@ -188,10 +217,17 @@ export const ruleSchema = z.object({
   falsePositives: shortText(2000).min(1),
   limitations: shortText(2000).min(1),
   references: z.array(z.string().url().max(500)).max(10).default([]),
+  scopes: z.array(z.enum(RULE_SCOPES)).max(7).default([]),
+  weight: z.number().int().min(0).max(100).default(0),
+  packages: z.array(z.string().regex(/^[a-z0-9_$]+(\/[A-Za-z0-9_$]+)*\/$/)).max(10).default([]),
   enabled: z.boolean().default(true),
 }).superRefine((r, ctx) => {
   if (r.kind === "SHA256" && !/^[a-f0-9]{64}$/.test(r.pattern)) ctx.addIssue({ code: "custom", path: ["pattern"], message: "SHA256 rules need a lowercase hex digest." });
   if (r.kind === "PACKAGE_PREFIX" && !/^[a-z0-9_$]+(\/[A-Za-z0-9_$]+)*\/$/.test(r.pattern)) ctx.addIssue({ code: "custom", path: ["pattern"], message: "Package prefixes look like com/example/client/ (slash separated, trailing slash)." });
+  if (r.kind === "STRING" && r.scopes.length === 0) ctx.addIssue({ code: "custom", path: ["scopes"], message: "STRING rules need at least one scope." });
+  if (r.kind === "STRING" && r.pattern.length < 6) ctx.addIssue({ code: "custom", path: ["pattern"], message: "String signatures must be at least 6 characters." });
+  if (r.kind === "STRING" && r.scopes.includes("memory") && r.pattern.length < 8) ctx.addIssue({ code: "custom", path: ["pattern"], message: "Memory strings must be at least 8 characters." });
+  if (r.kind.endsWith("_REGEX")) { try { new RegExp(r.pattern.replace(/^\(\?i\)/, ""), "i"); } catch { ctx.addIssue({ code: "custom", path: ["pattern"], message: "The regular expression does not compile." }); } }
   if (r.kind === "MEMORY_STRING" && r.pattern.length < 8) ctx.addIssue({ code: "custom", path: ["pattern"], message: "Memory strings must be at least 8 characters to avoid false positives." });
 });
 

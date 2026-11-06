@@ -1,0 +1,688 @@
+{
+  "title": "Cheat module names",
+  "note": "Feature names used by the structural cheat-module heuristic (SSME-H-MODULE_CLASSES). They never report on their own: an archive needs 3+ distinct feature classes, or 2+ high-signal ones. Names with scope 'memory' are also searched in the game's memory (4+ distinct names needed). Add names here to extend the heuristic.",
+  "defaults": {
+    "kind": "FEATURE_NAME",
+    "category": "Client modification",
+    "severity": "INFO",
+    "tier": "INCONCLUSIVE",
+    "confidence": 0,
+    "falsePositives": "Individually not evidence; see SSME-H-MODULE_CLASSES for thresholds.",
+    "limitations": "Obfuscated clients rename classes; this list only helps with readable class names."
+  },
+  "rules": [
+    {
+      "id": "SSME-FE-KILLAURA",
+      "name": "Cheat module class: KillAura",
+      "pattern": "KillAura",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named KillAura (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-AIMASSIST",
+      "name": "Cheat module class: AimAssist",
+      "pattern": "AimAssist",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named AimAssist (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-AIMBOT",
+      "name": "Cheat module class: AimBot",
+      "pattern": "AimBot",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named AimBot (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-TRIGGERBOT",
+      "name": "Cheat module class: TriggerBot",
+      "pattern": "TriggerBot",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named TriggerBot (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-AUTOCLICKER",
+      "name": "Cheat module class: AutoClicker",
+      "pattern": "AutoClicker",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named AutoClicker (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-CRYSTALAURA",
+      "name": "Cheat module class: CrystalAura",
+      "pattern": "CrystalAura",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named CrystalAura (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-AUTOCRYSTAL",
+      "name": "Cheat module class: AutoCrystal",
+      "pattern": "AutoCrystal",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named AutoCrystal (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-ANCHORAURA",
+      "name": "Cheat module class: AnchorAura",
+      "pattern": "AnchorAura",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named AnchorAura (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-BEDAURA",
+      "name": "Cheat module class: BedAura",
+      "pattern": "BedAura",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named BedAura (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-SCAFFOLD",
+      "name": "Cheat module class: Scaffold",
+      "pattern": "Scaffold",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named Scaffold (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-SCAFFOLDWALK",
+      "name": "Cheat module class: ScaffoldWalk",
+      "pattern": "ScaffoldWalk",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named ScaffoldWalk (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-ANTIKNOCKBACK",
+      "name": "Cheat module class: AntiKnockback",
+      "pattern": "AntiKnockback",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named AntiKnockback (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-ANTIKB",
+      "name": "Cheat module class: AntiKB",
+      "pattern": "AntiKB",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named AntiKB (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-CRITICALS",
+      "name": "Cheat module class: Criticals",
+      "pattern": "Criticals",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named Criticals (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-AUTOTOTEM",
+      "name": "Cheat module class: AutoTotem",
+      "pattern": "AutoTotem",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named AutoTotem (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-CHESTESP",
+      "name": "Cheat module class: ChestESP",
+      "pattern": "ChestESP",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named ChestESP (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-PLAYERESP",
+      "name": "Cheat module class: PlayerESP",
+      "pattern": "PlayerESP",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named PlayerESP (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-STORAGEESP",
+      "name": "Cheat module class: StorageESP",
+      "pattern": "StorageESP",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named StorageESP (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-BOWAIMBOT",
+      "name": "Cheat module class: BowAimbot",
+      "pattern": "BowAimbot",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named BowAimbot (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-NOFALL",
+      "name": "Cheat module class: NoFall",
+      "pattern": "NoFall",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named NoFall (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-LONGJUMP",
+      "name": "Cheat module class: LongJump",
+      "pattern": "LongJump",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named LongJump (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-HIGHJUMP",
+      "name": "Cheat module class: HighJump",
+      "pattern": "HighJump",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named HighJump (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-JESUS",
+      "name": "Cheat module class: Jesus",
+      "pattern": "Jesus",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named Jesus (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-NUKER",
+      "name": "Cheat module class: Nuker",
+      "pattern": "Nuker",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named Nuker (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-FASTPLACE",
+      "name": "Cheat module class: FastPlace",
+      "pattern": "FastPlace",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named FastPlace (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-AUTOARMOR",
+      "name": "Cheat module class: AutoArmor",
+      "pattern": "AutoArmor",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named AutoArmor (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-AUTOPOT",
+      "name": "Cheat module class: AutoPot",
+      "pattern": "AutoPot",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named AutoPot (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-AUTOSOUP",
+      "name": "Cheat module class: AutoSoup",
+      "pattern": "AutoSoup",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named AutoSoup (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-NOSLOW",
+      "name": "Cheat module class: NoSlow",
+      "pattern": "NoSlow",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named NoSlow (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-NOSLOWDOWN",
+      "name": "Cheat module class: NoSlowdown",
+      "pattern": "NoSlowdown",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named NoSlowdown (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-ELYTRAFLY",
+      "name": "Cheat module class: ElytraFly",
+      "pattern": "ElytraFly",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named ElytraFly (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-BOATFLY",
+      "name": "Cheat module class: BoatFly",
+      "pattern": "BoatFly",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named BoatFly (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-ANTIBOT",
+      "name": "Cheat module class: AntiBot",
+      "pattern": "AntiBot",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named AntiBot (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-SPIDER",
+      "name": "Cheat module class: Spider",
+      "pattern": "Spider",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named Spider (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-SURROUND",
+      "name": "Cheat module class: Surround",
+      "pattern": "Surround",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named Surround (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-HOLEFILLER",
+      "name": "Cheat module class: HoleFiller",
+      "pattern": "HoleFiller",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named HoleFiller (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-AUTOANCHOR",
+      "name": "Cheat module class: AutoAnchor",
+      "pattern": "AutoAnchor",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named AutoAnchor (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-TPAURA",
+      "name": "Cheat module class: TpAura",
+      "pattern": "TpAura",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named TpAura (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-INFINITEAURA",
+      "name": "Cheat module class: InfiniteAura",
+      "pattern": "InfiniteAura",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named InfiniteAura (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-MULTIAURA",
+      "name": "Cheat module class: MultiAura",
+      "pattern": "MultiAura",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named MultiAura (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-SILENTAURA",
+      "name": "Cheat module class: SilentAura",
+      "pattern": "SilentAura",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named SilentAura (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-WTAP",
+      "name": "Cheat module class: WTap",
+      "pattern": "WTap",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named WTap (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-AUTOWTAP",
+      "name": "Cheat module class: AutoWTap",
+      "pattern": "AutoWTap",
+      "classification": "high-signal",
+      "scopes": [
+        "memory"
+      ],
+      "description": "A class named AutoWTap (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-HITSELECT",
+      "name": "Cheat module class: HitSelect",
+      "pattern": "HitSelect",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named HitSelect (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-BLOCKHIT",
+      "name": "Cheat module class: BlockHit",
+      "pattern": "BlockHit",
+      "classification": "high-signal",
+      "scopes": [],
+      "description": "A class named BlockHit (optionally suffixed Module/Hack/Feature) is a cheat feature that legitimate mods do not implement as a class."
+    },
+    {
+      "id": "SSME-FE-VELOCITY",
+      "name": "Cheat module class (ambiguous): Velocity",
+      "pattern": "Velocity",
+      "classification": "ambiguous",
+      "description": "A class named Velocity only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-REACH",
+      "name": "Cheat module class (ambiguous): Reach",
+      "pattern": "Reach",
+      "classification": "ambiguous",
+      "description": "A class named Reach only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-FLY",
+      "name": "Cheat module class (ambiguous): Fly",
+      "pattern": "Fly",
+      "classification": "ambiguous",
+      "description": "A class named Fly only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-FLIGHT",
+      "name": "Cheat module class (ambiguous): Flight",
+      "pattern": "Flight",
+      "classification": "ambiguous",
+      "description": "A class named Flight only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-SPEED",
+      "name": "Cheat module class (ambiguous): Speed",
+      "pattern": "Speed",
+      "classification": "ambiguous",
+      "description": "A class named Speed only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-TIMER",
+      "name": "Cheat module class (ambiguous): Timer",
+      "pattern": "Timer",
+      "classification": "ambiguous",
+      "description": "A class named Timer only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-XRAY",
+      "name": "Cheat module class (ambiguous): XRay",
+      "pattern": "XRay",
+      "classification": "ambiguous",
+      "description": "A class named XRay only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-ESP",
+      "name": "Cheat module class (ambiguous): ESP",
+      "pattern": "ESP",
+      "classification": "ambiguous",
+      "description": "A class named ESP only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-FREECAM",
+      "name": "Cheat module class (ambiguous): Freecam",
+      "pattern": "Freecam",
+      "classification": "ambiguous",
+      "description": "A class named Freecam only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-TRACERS",
+      "name": "Cheat module class (ambiguous): Tracers",
+      "pattern": "Tracers",
+      "classification": "ambiguous",
+      "description": "A class named Tracers only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-STEP",
+      "name": "Cheat module class (ambiguous): Step",
+      "pattern": "Step",
+      "classification": "ambiguous",
+      "description": "A class named Step only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-BLINK",
+      "name": "Cheat module class (ambiguous): Blink",
+      "pattern": "Blink",
+      "classification": "ambiguous",
+      "description": "A class named Blink only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-SPRINT",
+      "name": "Cheat module class (ambiguous): Sprint",
+      "pattern": "Sprint",
+      "classification": "ambiguous",
+      "description": "A class named Sprint only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-HITBOXES",
+      "name": "Cheat module class (ambiguous): HitBoxes",
+      "pattern": "HitBoxes",
+      "classification": "ambiguous",
+      "description": "A class named HitBoxes only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-HITBOX",
+      "name": "Cheat module class (ambiguous): Hitbox",
+      "pattern": "Hitbox",
+      "classification": "ambiguous",
+      "description": "A class named Hitbox only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-FULLBRIGHT",
+      "name": "Cheat module class (ambiguous): Fullbright",
+      "pattern": "Fullbright",
+      "classification": "ambiguous",
+      "description": "A class named Fullbright only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-NAMETAGS",
+      "name": "Cheat module class (ambiguous): Nametags",
+      "pattern": "Nametags",
+      "classification": "ambiguous",
+      "description": "A class named Nametags only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-AUTOTOOL",
+      "name": "Cheat module class (ambiguous): AutoTool",
+      "pattern": "AutoTool",
+      "classification": "ambiguous",
+      "description": "A class named AutoTool only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-PHASE",
+      "name": "Cheat module class (ambiguous): Phase",
+      "pattern": "Phase",
+      "classification": "ambiguous",
+      "description": "A class named Phase only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-GLIDE",
+      "name": "Cheat module class (ambiguous): Glide",
+      "pattern": "Glide",
+      "classification": "ambiguous",
+      "description": "A class named Glide only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-NOCLIP",
+      "name": "Cheat module class (ambiguous): NoClip",
+      "pattern": "NoClip",
+      "classification": "ambiguous",
+      "description": "A class named NoClip only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-FE-AIRJUMP",
+      "name": "Cheat module class (ambiguous): AirJump",
+      "pattern": "AirJump",
+      "classification": "ambiguous",
+      "description": "A class named AirJump only counts when it sits inside a module-style package (modules, combat, movement…), because legitimate mods use the word for unrelated classes."
+    },
+    {
+      "id": "SSME-MP-MODULE",
+      "kind": "MODULE_PACKAGE",
+      "name": "Module package segment: module",
+      "pattern": "module",
+      "description": "A package segment \"module\" groups cheat modules in hacked clients' module systems (e.g. client/module/combat/KillAura)."
+    },
+    {
+      "id": "SSME-MP-MODULES",
+      "kind": "MODULE_PACKAGE",
+      "name": "Module package segment: modules",
+      "pattern": "modules",
+      "description": "A package segment \"modules\" groups cheat modules in hacked clients' module systems (e.g. client/module/combat/KillAura)."
+    },
+    {
+      "id": "SSME-MP-FEATURE",
+      "kind": "MODULE_PACKAGE",
+      "name": "Module package segment: feature",
+      "pattern": "feature",
+      "description": "A package segment \"feature\" groups cheat modules in hacked clients' module systems (e.g. client/module/combat/KillAura)."
+    },
+    {
+      "id": "SSME-MP-FEATURES",
+      "kind": "MODULE_PACKAGE",
+      "name": "Module package segment: features",
+      "pattern": "features",
+      "description": "A package segment \"features\" groups cheat modules in hacked clients' module systems (e.g. client/module/combat/KillAura)."
+    },
+    {
+      "id": "SSME-MP-HACK",
+      "kind": "MODULE_PACKAGE",
+      "name": "Module package segment: hack",
+      "pattern": "hack",
+      "description": "A package segment \"hack\" groups cheat modules in hacked clients' module systems (e.g. client/module/combat/KillAura)."
+    },
+    {
+      "id": "SSME-MP-HACKS",
+      "kind": "MODULE_PACKAGE",
+      "name": "Module package segment: hacks",
+      "pattern": "hacks",
+      "description": "A package segment \"hacks\" groups cheat modules in hacked clients' module systems (e.g. client/module/combat/KillAura)."
+    },
+    {
+      "id": "SSME-MP-CHEAT",
+      "kind": "MODULE_PACKAGE",
+      "name": "Module package segment: cheat",
+      "pattern": "cheat",
+      "description": "A package segment \"cheat\" groups cheat modules in hacked clients' module systems (e.g. client/module/combat/KillAura)."
+    },
+    {
+      "id": "SSME-MP-CHEATS",
+      "kind": "MODULE_PACKAGE",
+      "name": "Module package segment: cheats",
+      "pattern": "cheats",
+      "description": "A package segment \"cheats\" groups cheat modules in hacked clients' module systems (e.g. client/module/combat/KillAura)."
+    },
+    {
+      "id": "SSME-MP-COMBAT",
+      "kind": "MODULE_PACKAGE",
+      "name": "Module package segment: combat",
+      "pattern": "combat",
+      "description": "A package segment \"combat\" groups cheat modules in hacked clients' module systems (e.g. client/module/combat/KillAura)."
+    },
+    {
+      "id": "SSME-MP-MOVEMENT",
+      "kind": "MODULE_PACKAGE",
+      "name": "Module package segment: movement",
+      "pattern": "movement",
+      "description": "A package segment \"movement\" groups cheat modules in hacked clients' module systems (e.g. client/module/combat/KillAura)."
+    },
+    {
+      "id": "SSME-MP-RENDER",
+      "kind": "MODULE_PACKAGE",
+      "name": "Module package segment: render",
+      "pattern": "render",
+      "description": "A package segment \"render\" groups cheat modules in hacked clients' module systems (e.g. client/module/combat/KillAura)."
+    },
+    {
+      "id": "SSME-MP-VISUAL",
+      "kind": "MODULE_PACKAGE",
+      "name": "Module package segment: visual",
+      "pattern": "visual",
+      "description": "A package segment \"visual\" groups cheat modules in hacked clients' module systems (e.g. client/module/combat/KillAura)."
+    },
+    {
+      "id": "SSME-MP-VISUALS",
+      "kind": "MODULE_PACKAGE",
+      "name": "Module package segment: visuals",
+      "pattern": "visuals",
+      "description": "A package segment \"visuals\" groups cheat modules in hacked clients' module systems (e.g. client/module/combat/KillAura)."
+    },
+    {
+      "id": "SSME-MP-EXPLOIT",
+      "kind": "MODULE_PACKAGE",
+      "name": "Module package segment: exploit",
+      "pattern": "exploit",
+      "description": "A package segment \"exploit\" groups cheat modules in hacked clients' module systems (e.g. client/module/combat/KillAura)."
+    },
+    {
+      "id": "SSME-MP-EXPLOITS",
+      "kind": "MODULE_PACKAGE",
+      "name": "Module package segment: exploits",
+      "pattern": "exploits",
+      "description": "A package segment \"exploits\" groups cheat modules in hacked clients' module systems (e.g. client/module/combat/KillAura)."
+    }
+  ]
+}

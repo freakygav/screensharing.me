@@ -1,0 +1,110 @@
+{
+  "title": "Executables and file names",
+  "note": "Names of executables found inside the selected instance, and file-name hints. A name alone is never more than suspicious.",
+  "rules": [
+    {
+      "id": "SSME-EX-0080",
+      "name": "Auto-clicker executed",
+      "kind": "EXECUTABLE_REGEX",
+      "pattern": "(?i)auto[\\s_\\-.]*click",
+      "category": "Automation",
+      "severity": "MEDIUM",
+      "tier": "SUSPICIOUS_CONFIGURATION",
+      "confidence": 70,
+      "description": "An executable whose name identifies it as an auto-clicker is stored inside the Minecraft instance. Auto-clickers automate attacks (CPS manipulation).",
+      "falsePositives": "Auto-clickers have non-gaming uses (accessibility, idle games). Execution time must be correlated with the game session.",
+      "limitations": "Matched against executables stored inside the selected instance. Names are user-controlled; a renamed tool will not match, but every executable in the instance is also string-scanned."
+    },
+    {
+      "id": "SSME-EX-0081",
+      "name": "DLL injector executed",
+      "kind": "EXECUTABLE_REGEX",
+      "pattern": "(?i)(injector|xenos(64)?\\.exe|extreme ?injector)",
+      "category": "Injection",
+      "severity": "HIGH",
+      "tier": "SUSPICIOUS_CONFIGURATION",
+      "confidence": 70,
+      "description": "An executable named like a DLL injector is stored inside the Minecraft instance. Injectors are used to load ghost clients into the game process.",
+      "falsePositives": "Some modding tools for other games are named \"injector\".",
+      "limitations": "Matched against executables stored inside the selected instance. Names are user-controlled; a renamed tool will not match, but every executable in the instance is also string-scanned."
+    },
+    {
+      "id": "SSME-EX-0082",
+      "name": "Memory editor executed (Cheat Engine)",
+      "kind": "EXECUTABLE_REGEX",
+      "pattern": "(?i)^cheat ?engine|^cheatengine",
+      "category": "Memory tooling",
+      "severity": "MEDIUM",
+      "tier": "WEAK_INDICATOR",
+      "confidence": 50,
+      "description": "Cheat Engine, a memory scanner/editor, is stored inside the Minecraft instance.",
+      "falsePositives": "Cheat Engine is commonly used for singleplayer games and learning.",
+      "limitations": "Matched against executables stored inside the selected instance. Names are user-controlled; a renamed tool will not match, but every executable in the instance is also string-scanned."
+    },
+    {
+      "id": "SSME-EX-0083",
+      "name": "Process manipulation tool executed",
+      "kind": "EXECUTABLE_REGEX",
+      "pattern": "(?i)^(processhacker|systeminformer)",
+      "category": "Memory tooling",
+      "severity": "LOW",
+      "tier": "WEAK_INDICATOR",
+      "confidence": 35,
+      "description": "Process Hacker / System Informer is stored inside the Minecraft instance. These tools can terminate processes, edit memory strings and unload modules.",
+      "falsePositives": "Popular legitimate administration tools.",
+      "limitations": "Matched against executables stored inside the selected instance. Names are user-controlled; a renamed tool will not match, but every executable in the instance is also string-scanned."
+    },
+    {
+      "id": "SSME-EX-0084",
+      "name": "Secure-delete tool executed",
+      "kind": "EXECUTABLE_REGEX",
+      "pattern": "(?i)^sdelete(64)?(a)?\\.exe",
+      "category": "Anti-forensics",
+      "severity": "MEDIUM",
+      "tier": "WEAK_INDICATOR",
+      "confidence": 45,
+      "description": "A secure file deletion tool is stored inside the Minecraft instance. Secure deletion prevents recovery of files that were removed.",
+      "falsePositives": "Used legitimately for privacy.",
+      "limitations": "Matched against executables stored inside the selected instance. Names are user-controlled; a renamed tool will not match, but every executable in the instance is also string-scanned."
+    },
+    {
+      "id": "SSME-EX-0085",
+      "name": "Macro automation runtime executed (AutoHotkey)",
+      "kind": "EXECUTABLE_REGEX",
+      "pattern": "(?i)^autohotkey",
+      "category": "Automation",
+      "severity": "LOW",
+      "tier": "WEAK_INDICATOR",
+      "confidence": 30,
+      "description": "AutoHotkey is stored inside the Minecraft instance. AutoHotkey scripts can implement clicker or macro behaviour.",
+      "falsePositives": "AutoHotkey is a very common productivity tool.",
+      "limitations": "Matched against executables stored inside the selected instance. Names are user-controlled; a renamed tool will not match, but every executable in the instance is also string-scanned."
+    },
+    {
+      "id": "SSME-FN-0086",
+      "name": "File named after a known cheat client",
+      "kind": "FILE_NAME_REGEX",
+      "pattern": "(?i)(meteor[-_ ]?client|wurst[-_ ]?client|liquidbounce|aristois|bleachhack|doomsday|novoware|rusherhack|thunderhack|vape[-_ ]?(v4|lite|client)|slinky|whiteout[-_ ]?client|drip[-_ ]?(lite|client))",
+      "category": "Cheat client",
+      "severity": "MEDIUM",
+      "tier": "SUSPICIOUS_CONFIGURATION",
+      "confidence": 60,
+      "description": "A Java archive, executable or library is named after a known cheat client.",
+      "falsePositives": "File names are user-controlled; a file may be mis-named, an installer, or unrelated. A name alone never confirms a client.",
+      "limitations": "Renamed clients will not match. The file content is analysed separately when it still exists."
+    },
+    {
+      "id": "SSME-FN-0087",
+      "name": "JNativeHook native library extracted",
+      "kind": "FILE_NAME_REGEX",
+      "pattern": "(?i)^jnativehook.*\\.dll$",
+      "category": "Automation",
+      "severity": "LOW",
+      "tier": "WEAK_INDICATOR",
+      "confidence": 35,
+      "description": "The JNativeHook native library was extracted to a temporary folder. JNativeHook gives Java programs global mouse/keyboard hooks and is used by Java auto-clickers.",
+      "falsePositives": "Legitimate Java applications (hotkey tools, overlays) also use JNativeHook.",
+      "limitations": "Only observed in temporary folders; the extracting program is not identified."
+    }
+  ]
+}

@@ -18,11 +18,8 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Glow -->
-            <Border Grid.RowSpan="2" Height="320" VerticalAlignment="Top" Background="{StaticResource GlowBrush}" IsHitTestVisible="False"/>
-
             <!-- Title bar -->
-            <Grid Grid.Row="0" Background="#B307080C">
+            <Grid Grid.Row="0" Background="{StaticResource Raised}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
@@ -37,7 +34,7 @@
                         <StackPanel Orientation="Horizontal">
                             <c:Logo Width="20" Height="20"/>
                             <TextBlock Margin="9,0,0,0" FontWeight="Bold" FontSize="13.5" Foreground="{StaticResource Ink}" VerticalAlignment="Center">
-                                <Run Text="screensharing"/><Run Text=".me" Foreground="{StaticResource Accent2}"/>
+                                <Run Text="screensharing"/><Run Text=".me" Foreground="{StaticResource Muted}"/>
                             </TextBlock>
                         </StackPanel>
                     </Button>
@@ -50,7 +47,7 @@
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource Chip}" Margin="0,0,8,0" Visibility="{Binding Elevated, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="Administrator" FontSize="11.5" Foreground="#D8CEFF"/>
+                        <TextBlock Text="Administrator" FontSize="11.5" Foreground="{StaticResource Ink2}"/>
                     </Border>
                     <Button Style="{StaticResource NavButton}" Command="{Binding OpenAdminCommand}" ToolTip="Administrator console">
                         <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Icon}" Text="&#xE83D;" FontSize="12" Margin="0,0,6,0"/><TextBlock Text="Admin"/></StackPanel>

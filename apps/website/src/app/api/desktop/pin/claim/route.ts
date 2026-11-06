@@ -36,9 +36,9 @@ export const POST = handler(async (req: Request) => {
     investigation: claimed.investigation,
     rulesetVersion: await getRulesetVersion(),
     consent: {
-      version: "2026-11",
+      version: "2026-11b",
       text:
-        "The investigator has asked you to run a forensic scan for Minecraft modifications. With your consent, screensharing.me will read: Minecraft and launcher folders (mods, versions, logs, configs), Java installations, running Java processes and their loaded modules and memory, Windows execution records (Prefetch, BAM), the Recycle Bin and NTFS change journal entries for Java archives and executables, selected event logs and service settings. It does not read browser data, passwords, launcher account tokens, documents or photos, and it does not modify any file. Findings and file hashes are sent to the investigator.",
+        "The investigator has asked you to run a forensic scan of the Minecraft instance you are playing. Before the scan starts you choose which running instance is examined. With your consent, screensharing.me reads only that instance: its folder (mods, configuration, resource and shader packs, logs and crash reports), the game files it loads, and the running game process (its launch arguments, loaded modules and a bounded read of its memory). Nothing outside the instance is read: no other Minecraft instances, documents, browser data, passwords, account tokens or Windows records. No file is changed. Findings, file hashes and the instance path are sent to the investigator.",
     },
   });
 });

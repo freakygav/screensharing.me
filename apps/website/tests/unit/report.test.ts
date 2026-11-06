@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { reportToCsv, reportToJson, reportToPdf } from "@/lib/report";
-import { computeVerdict } from "@/lib/investigations";
+import { computeVerdict, outcomeOf } from "@/lib/investigations";
 import type { InvestigationSnapshot } from "@/lib/investigations";
 
 const snap = {
@@ -20,7 +20,7 @@ const snap = {
   detections: [{
     id: "d1", ruleId: "SSME-CL-0001", name: "=HYPERLINK(\"http://evil\")", description: "Contains “quotes”, ω and \u0000 control", category: "Cheat client", categoryKey: "mods",
     severity: "CRITICAL", tier: "CONFIRMED_ARTIFACT", confidence: 96, method: "m", whyItMatters: "w", limitations: "l", falsePositiveNotes: "f", alternativeExplanations: "a",
-    detectedAt: "2026-11-06T10:02:00.000Z",
+    detectedAt: "2026-11-06T10:02:00.000Z", family: "Meteor Client", signature: "mod id \"meteor-client\"", location: "mods/meteor.jar", outcome: "CONFIRMED",
     evidence: [{ id: "e1", kind: "FILE", source: "Mod archive", reference: "C:\\mods\\" + "very-long-path-segment-".repeat(20) + ".jar", sha256: "a".repeat(64), sizeBytes: 100, createdTime: null, modifiedTime: null, accessedTime: null, observedAt: "2026-11-06T10:02:00.000Z", details: { modId: "meteor-client" } }],
   }],
   lastEventId: "1", generatedAt: "2026-11-06T10:04:00.000Z",
@@ -59,5 +59,28 @@ describe("verdicts", () => {
     expect(computeVerdict({ ...zero, CONFIRMED_ARTIFACT: 1 }, false).level).toBe("review");
     for (const v of [computeVerdict(zero, true), computeVerdict({ ...zero, CONFIRMED_ARTIFACT: 1 }, true)])
       expect(`${v.title} ${v.explanation}`.toLowerCase()).not.toContain("cheater");
+  });
+});
+
+describe("outcomes", () => {
+  it("maps tiers to investigator outcomes and never calls an empty result clean", () => {
+    expect(outcomeOf("SSME-CL-0001", "CONFIRMED_ARTIFACT")).toBe("CONFIRMED");
+    expect(outcomeOf("SSME-H-MODULE_CLASSES", "STRONG_INDICATOR")).toBe("HIGH_CONFIDENCE");
+    expect(outcomeOf("SSME-UT-0001", "SUSPICIOUS_CONFIGURATION")).toBe("LOW_CONFIDENCE");
+    expect(outcomeOf("SSME-H-UNINSPECTABLE", "INCONCLUSIVE")).toBe("UNABLE_TO_INSPECT");
+    expect(outcomeOf("SSME-H-UNRECOGNIZED_MOD", "INCONCLUSIVE")).toBe("INFORMATIONAL");
+    const zero = { CONFIRMED_ARTIFACT: 0, STRONG_INDICATOR: 0, SUSPICIOUS_CONFIGURATION: 0, WEAK_INDICATOR: 0, INCONCLUSIVE: 0 };
+    const v = computeVerdict(zero, true, { uninspectable: 2, signatures: 150 });
+    expect(v.title).toBe("No evidence detected");
+    expect(v.explanation).toContain("not proof");
+    expect(v.explanation).toContain("150 signatures");
+    expect(v.explanation).toContain("2 files could not be inspected");
+  });
+  it("exports the suspected client, location, signature and review status", () => {
+    const csv = reportToCsv(snap);
+    expect(csv).toContain("suspected_client");
+    expect(csv).toContain("Meteor Client");
+    expect(csv).toContain("mods/meteor.jar");
+    expect(csv).toContain("Confirmed detection");
   });
 });

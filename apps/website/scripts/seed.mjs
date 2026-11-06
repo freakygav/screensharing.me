@@ -25,11 +25,17 @@ async function seedRules() {
       name: r.name, description: r.description, category: r.category, kind: r.kind, pattern: r.pattern,
       family: r.family ?? null, features: r.features ?? [], severity: r.severity, tier: r.tier, confidence: r.confidence,
       classification: r.classification ?? null, falsePositives: r.falsePositives, limitations: r.limitations, references: r.references ?? [],
+      scopes: r.scopes ?? [], weight: r.weight ?? 0, packages: r.packages ?? [],
     };
     const existing = await db.detectionRule.findUnique({ where: { id: r.id } });
     if (!existing) { await db.detectionRule.create({ data: { id: r.id, ...data } }); created++; }
     else if (!existing.updatedById) { await db.detectionRule.update({ where: { id: r.id }, data }); updated++; } // never clobber admin edits
   }
+  // Rules that left the catalog stay in the database (old reports reference them) but are disabled,
+  // so scanners no longer receive them. The system-wide checks of version 1.0 were retired this way.
+  const ids = new Set(catalog.rules.map((r) => r.id));
+  const retired = await db.detectionRule.updateMany({ where: { id: { notIn: [...ids] }, enabled: true }, data: { enabled: false } });
+  if (retired.count) console.log(`[seed] rules: ${retired.count} retired (disabled)`);
   await db.systemConfig.upsert({ where: { key: "rulesetVersion" }, create: { key: "rulesetVersion", value: catalog.version }, update: { value: catalog.version } });
   console.log(`[seed] rules: ${created} created, ${updated} refreshed (catalog ${catalog.version})`);
 }

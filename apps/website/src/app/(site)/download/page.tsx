@@ -32,9 +32,8 @@ export default async function Download() {
   const info = local ? { href: "/download/screensharing.me.exe", sha: local.sha, size: local.size as number | null } : remote ? { ...remote, size: null } : null;
   return (
     <div className="relative">
-      <div className="glow-top pointer-events-none absolute inset-x-0 top-0 h-80" />
       <div className="relative mx-auto max-w-3xl px-5 py-20 text-center">
-        <div className="mx-auto mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl border border-[rgba(124,92,255,.3)] bg-[rgba(124,92,255,.12)] text-accent-2"><IconMonitor size={22} /></div>
+        <div className="mx-auto mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl border border-accent/40 accent-soft text-accent-2"><IconMonitor size={22} /></div>
         <h1 className="text-4xl font-extrabold tracking-tight">Download screensharing.me</h1>
         <p className="mx-auto mt-3 max-w-lg text-muted">For Windows 10 and 11 (x64). Self-contained — no .NET installation required. Run it when an investigator gives you a PIN.</p>
         {info ? (
@@ -55,7 +54,7 @@ export default async function Download() {
           {[
             ["Read-only", "Never modifies your files or Minecraft installation."],
             ["Consent first", "Nothing is collected until you approve the listed sources."],
-            ["Run as admin (optional)", "Administrator rights unlock Prefetch, BAM and the change journal. Without them those checks are reported as skipped."],
+            ["Start Minecraft first", "The scanner examines the instance that is running. If the game runs as administrator, run the scanner as administrator too so it can read the game process."],
           ].map(([t, d]) => (
             <div key={t} className="card p-4"><div className="text-sm font-semibold">{t}</div><p className="mt-1.5 text-[12.5px] leading-relaxed text-muted">{d}</p></div>
           ))}

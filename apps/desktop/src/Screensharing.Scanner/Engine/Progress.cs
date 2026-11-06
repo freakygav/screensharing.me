@@ -13,4 +13,13 @@ public sealed class CategoryState
     public CategoryState Clone() => (CategoryState)MemberwiseClone();
 }
 
-public sealed record ScanProgress(int Percent, string? Activity, IReadOnlyList<CategoryState> Categories, long UnitsDone, long UnitsTotal);
+public sealed record ScanProgress(int Percent, string? Activity, IReadOnlyList<CategoryState> Categories, long UnitsDone, long UnitsTotal)
+{
+    public string Stage { get; init; } = "";
+    public int FilesExamined { get; init; }
+    public int FilesAnalyzed { get; init; }
+    public int FilesSkipped { get; init; }
+    public int UnableToInspect { get; init; }
+    public int Findings { get; init; }
+    public TimeSpan Elapsed { get; init; }
+}

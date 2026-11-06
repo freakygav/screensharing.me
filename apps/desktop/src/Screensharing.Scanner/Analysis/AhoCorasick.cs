@@ -2,7 +2,7 @@ using System.Text;
 
 namespace Screensharing.Scanner.Analysis;
 
-/// <summary>Multi-pattern byte search (ASCII patterns, case-sensitive) in linear time.</summary>
+/// <summary>Multi-pattern byte search (case-sensitive) in linear time.</summary>
 public sealed class AhoCorasick
 {
     private readonly List<int[]> _goto = [];
@@ -10,14 +10,19 @@ public sealed class AhoCorasick
     private readonly List<List<int>> _out = [];
     private readonly int[] _lengths;
 
-    public AhoCorasick(IReadOnlyList<string> patterns)
+    public int PatternCount => _lengths.Length;
+
+    public AhoCorasick(IReadOnlyList<string> patterns) : this(patterns.Select(p => Encoding.UTF8.GetBytes(p)).ToList()) { }
+
+    public AhoCorasick(IReadOnlyList<byte[]> patterns)
     {
-        _lengths = patterns.Select(p => Encoding.UTF8.GetByteCount(p)).ToArray();
+        _lengths = patterns.Select(p => p.Length).ToArray();
         NewState();
         for (var i = 0; i < patterns.Count; i++)
         {
+            if (patterns[i].Length == 0) continue;
             var s = 0;
-            foreach (var b in Encoding.UTF8.GetBytes(patterns[i]))
+            foreach (var b in patterns[i])
             {
                 if (_goto[s][b] == 0) { _goto[s][b] = NewState(); }
                 s = _goto[s][b];
@@ -53,13 +58,21 @@ public sealed class AhoCorasick
     public IEnumerable<(int Pattern, int Position)> Search(ReadOnlySpan<byte> data)
     {
         var results = new List<(int, int)>();
+        Search(data, (p, pos) => results.Add((p, pos)));
+        return results;
+    }
+
+    /// <summary>Invokes <paramref name="onMatch"/> for every match without allocating a result list.</summary>
+    public void Search(ReadOnlySpan<byte> data, Action<int, int> onMatch)
+    {
+        if (_lengths.Length == 0) return;
         var s = 0;
         for (var i = 0; i < data.Length; i++)
         {
             s = _goto[s][data[i]];
-            if (_out[s].Count == 0) continue;
-            foreach (var p in _out[s]) results.Add((p, i - _lengths[p] + 1));
+            var outs = _out[s];
+            if (outs.Count == 0) continue;
+            foreach (var p in outs) onMatch(p, i - _lengths[p] + 1);
         }
-        return results;
     }
 }
