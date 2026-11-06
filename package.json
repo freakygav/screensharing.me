@@ -1,0 +1,16 @@
+{
+  "name": "screensharing.me",
+  "private": true,
+  "description": "screensharing.me monorepo — see README.md",
+  "scripts": {
+    "db": "npm --prefix apps/website run db:start",
+    "dev": "npm --prefix apps/website run dev",
+    "seed": "npm --prefix apps/website run db:seed",
+    "test:web": "npm --prefix apps/website test",
+    "test:e2e": "node --test tests/e2e/api-flow.test.mjs",
+    "test:desktop": "dotnet test apps/desktop/Screensharing.slnx",
+    "rules": "node packages/detection-rules/build-rules.mjs && node scripts/gen-catalog.mjs",
+    "build:web": "npm --prefix apps/website run build",
+    "build:exe": "powershell -ExecutionPolicy Bypass -File scripts/build-desktop.ps1"
+  }
+}

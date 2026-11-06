@@ -1,0 +1,24 @@
+<UserControl x:Class="Screensharing.Desktop.Views.PinView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Screensharing.Desktop.Controls">
+    <Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="520">
+            <TextBlock Text="WELCOME TO SCREENSHARING.ME" Style="{StaticResource Eyebrow}" HorizontalAlignment="Center" FontSize="12"/>
+            <TextBlock Text="Enter Investigation PIN" Style="{StaticResource H1}" FontSize="30" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+            <TextBlock Style="{StaticResource MutedText}" TextAlignment="Center" Margin="0,8,0,0" Text="Your investigator received a six-digit PIN on screensharing.me. It is single-use and expires after a few minutes."/>
+            <c:PinBox x:Name="Pin" Margin="0,34,0,0" Pin="{Binding Pin, Mode=TwoWay}" Submit="Pin_Submit"/>
+            <Border Margin="0,20,0,0" CornerRadius="10" Padding="12,9" Background="{StaticResource CritSoft}" BorderBrush="#59FF4D6A" BorderThickness="1"
+                    Visibility="{Binding Error, Converter={StaticResource NullToVis}}">
+                <TextBlock Text="{Binding Error}" Foreground="#FFD4DC" FontSize="12.5" TextWrapping="Wrap"/>
+            </Border>
+            <Button Style="{StaticResource BtnPrimary}" Height="48" Width="300" Margin="0,30,0,0" Command="{Binding StartCommand}" FontSize="14">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="START INVESTIGATION" FontWeight="Bold"/>
+                    <TextBlock Style="{StaticResource Icon}" Text="&#xE76C;" FontSize="11" Margin="10,1,0,0"/>
+                </StackPanel>
+            </Button>
+            <TextBlock Style="{StaticResource MutedText}" FontSize="11.5" TextAlignment="Center" Margin="0,16,0,0" Text="You can paste the PIN (e.g. 483-921). Nothing is scanned before you review and accept the next screen."/>
+        </StackPanel>
+    </Grid>
+</UserControl>

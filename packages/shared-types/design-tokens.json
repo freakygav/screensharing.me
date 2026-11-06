@@ -1,0 +1,18 @@
+{
+  "$comment": "screensharing.me design tokens. Consumed by apps/website/src/app/globals.css and apps/desktop/src/Screensharing.Desktop/Themes/Theme.xaml (keep in sync).",
+  "color": {
+    "bg": "#07080C", "raised": "#0C0E14", "panel": "#10131B", "panel2": "#151925",
+    "line": "#1F2433", "lineStrong": "#2A3145",
+    "ink": "#E8EBF3", "ink2": "#B8BFD0", "muted": "#8B93A8", "dim": "#5B6378",
+    "accent": "#7C5CFF", "accent2": "#8A6DFF", "accent3": "#6A4CF0", "blue": "#4DB8FF",
+    "critical": "#FF4D6A", "high": "#FF8A4C", "medium": "#F5C451", "low": "#4DB8FF", "ok": "#3DDC97"
+  },
+  "gradient": {
+    "card": ["#10131B", "#0C0E14"],
+    "primary": ["#8A6DFF", "#6A4CF0"],
+    "headline": ["#FFFFFF", "#A48BFF", "#4DB8FF"],
+    "logo": ["#8A6DFF", "#4DB8FF"]
+  },
+  "radius": { "card": 12, "control": 10, "chip": 999 },
+  "font": { "sans": "Inter / Segoe UI Variable", "mono": "JetBrains Mono / Cascadia Mono" }
+}

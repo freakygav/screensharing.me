@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Screensharing.Desktop/Screensharing.Desktop.csproj" />
+    <Project Path="src/Screensharing.Scanner/Screensharing.Scanner.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Screensharing.Desktop.Tests/Screensharing.Desktop.Tests.csproj" />
+    <Project Path="tests/Screensharing.Scanner.Tests/Screensharing.Scanner.Tests.csproj" />
+  </Folder>
+</Solution>

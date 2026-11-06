@@ -1,0 +1,91 @@
+<UserControl x:Class="Screensharing.Desktop.Views.EvidenceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="40,28" MaxWidth="1000">
+            <Button Style="{StaticResource BtnGhost}" HorizontalAlignment="Left" Command="{Binding BackCommand}" Padding="0,0,10,0">
+                <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Icon}" Text="&#xE72B;" FontSize="11" Margin="0,0,6,0"/><TextBlock Text="Back to results"/></StackPanel>
+            </Button>
+            <TextBlock Text="EVIDENCE VIEWER" Style="{StaticResource Eyebrow}" Margin="0,10,0,0"/>
+            <TextBlock Text="{Binding Finding.Name}" Style="{StaticResource H1}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+            <WrapPanel Margin="0,10,0,0">
+                <Border Style="{StaticResource Chip}" Margin="0,0,6,0" Background="{Binding Finding.Severity, Converter={StaticResource Tone}, ConverterParameter=soft}" BorderBrush="{Binding Finding.Severity, Converter={StaticResource Tone}, ConverterParameter=border}">
+                    <TextBlock Text="{Binding Finding.Severity}" FontSize="11" FontWeight="SemiBold" Foreground="{Binding Finding.Severity, Converter={StaticResource Tone}}"/>
+                </Border>
+                <Border Style="{StaticResource Chip}" Margin="0,0,6,0"><TextBlock Text="{Binding Finding.TierLabel}" FontSize="11" Foreground="{Binding Finding.Tier, Converter={StaticResource Tone}}"/></Border>
+                <Border Style="{StaticResource Chip}" Margin="0,0,6,0"><TextBlock FontSize="11" Foreground="{StaticResource Ink2}"><Run Text="Confidence "/><Run Text="{Binding Finding.Confidence, Mode=OneWay}"/><Run Text="%"/></TextBlock></Border>
+                <Border Style="{StaticResource Chip}" Margin="0,0,6,0"><TextBlock Text="{Binding Finding.Category}" FontSize="11" Foreground="{StaticResource Ink2}"/></Border>
+                <Border Style="{StaticResource Chip}" Margin="0,0,6,0"><TextBlock Text="{Binding Finding.RuleId}" FontSize="11" FontFamily="{StaticResource Mono}" Foreground="{StaticResource Ink2}"/></Border>
+                <Border Style="{StaticResource Chip}"><TextBlock FontSize="11" Foreground="{StaticResource Ink2}"><Run Text="Detected "/><Run Text="{Binding Finding.DetectedAt, Mode=OneWay, Converter={StaticResource LocalTime}}"/></TextBlock></Border>
+            </WrapPanel>
+
+            <Border Style="{StaticResource Card}" Margin="0,18,0,0">
+                <StackPanel>
+                    <TextBlock Text="{Binding Finding.Description}" Style="{StaticResource Body}" FontSize="13.5"/>
+                    <UniformGrid Columns="2" Margin="0,16,0,0">
+                        <StackPanel Margin="0,0,16,14"><TextBlock Text="WHY THIS MATTERS" Style="{StaticResource Eyebrow}"/><TextBlock Text="{Binding Finding.WhyItMatters}" Style="{StaticResource Body}" Margin="0,4,0,0"/></StackPanel>
+                        <StackPanel Margin="0,0,0,14"><TextBlock Text="DETECTION METHOD" Style="{StaticResource Eyebrow}"/><TextBlock Text="{Binding Finding.Method}" Style="{StaticResource Body}" Margin="0,4,0,0"/></StackPanel>
+                        <StackPanel Margin="0,0,16,0"><TextBlock Text="LIMITATIONS" Style="{StaticResource Eyebrow}"/><TextBlock Text="{Binding Finding.Limitations}" Style="{StaticResource Body}" Margin="0,4,0,0"/></StackPanel>
+                        <StackPanel><TextBlock Text="ALTERNATIVE LEGITIMATE EXPLANATIONS" Style="{StaticResource Eyebrow}"/><TextBlock Text="{Binding Finding.AlternativeExplanations}" Style="{StaticResource Body}" Margin="0,4,0,0"/></StackPanel>
+                    </UniformGrid>
+                    <TextBlock Text="FALSE-POSITIVE CONSIDERATIONS" Style="{StaticResource Eyebrow}" Margin="0,14,0,0"/>
+                    <TextBlock Text="{Binding Finding.FalsePositiveNotes}" Style="{StaticResource Body}" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Style="{StaticResource H2}" Margin="0,22,0,10"><Run Text="Evidence ("/><Run Text="{Binding Finding.Evidence.Count, Mode=OneWay}"/><Run Text=")"/></TextBlock>
+            <ItemsControl ItemsSource="{Binding Finding.Evidence}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,10" Padding="18,14">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Style="{StaticResource Chip}"><TextBlock Text="{Binding Kind}" FontSize="11" Foreground="{StaticResource Accent2}" FontWeight="SemiBold"/></Border>
+                                        <TextBlock Text="{Binding Source}" Foreground="{StaticResource Muted}" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <Button Style="{StaticResource BtnGhost}" Content="Copy path" Command="{Binding DataContext.CopyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding Reference}"/>
+                                        <Button Style="{StaticResource BtnGhost}" Content="Show in Explorer" Command="{Binding DataContext.RevealCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding Reference}"
+                                                Visibility="{Binding DataContext.Local, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource BoolToVis}}"/>
+                                    </StackPanel>
+                                </Grid>
+                                <TextBox Text="{Binding Reference, Mode=OneWay}" IsReadOnly="True" FontFamily="{StaticResource Mono}" FontSize="12.5" Height="Auto" MinHeight="36" TextWrapping="Wrap" Padding="8,8" Margin="0,10,0,0"/>
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="110"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                                    <TextBlock Text="SHA-256" Foreground="{StaticResource Dim}" FontSize="12" Margin="0,3"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Sha256, TargetNullValue='— (not applicable)'}" Style="{StaticResource MonoText}" VerticalAlignment="Center"/>
+                                        <Button Style="{StaticResource BtnGhost}" Height="24" Content="Copy" Margin="6,0,0,0" Command="{Binding DataContext.CopyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding Sha256}" Visibility="{Binding Sha256, Converter={StaticResource NullToVis}}"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Row="1" Text="Size" Foreground="{StaticResource Dim}" FontSize="12" Margin="0,3"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SizeBytes, Converter={StaticResource Bytes}}" Style="{StaticResource MonoText}" Margin="0,3"/>
+                                    <TextBlock Grid.Row="2" Text="Created" Foreground="{StaticResource Dim}" FontSize="12" Margin="0,3"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding CreatedTime, Converter={StaticResource LocalTime}}" Style="{StaticResource MonoText}" Margin="0,3"/>
+                                    <TextBlock Grid.Row="3" Text="Modified" Foreground="{StaticResource Dim}" FontSize="12" Margin="0,3"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ModifiedTime, Converter={StaticResource LocalTime}}" Style="{StaticResource MonoText}" Margin="0,3"/>
+                                    <TextBlock Grid.Row="4" Text="Observed" Foreground="{StaticResource Dim}" FontSize="12" Margin="0,3"/>
+                                    <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ObservedAt, Converter={StaticResource LocalTime}}" Style="{StaticResource MonoText}" Margin="0,3"/>
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding Details}" Margin="0,8,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,2">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="110"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Key}" Foreground="{StaticResource Dim}" FontSize="12" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding Value}" Style="{StaticResource MonoText}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Style="{StaticResource MutedText}" FontSize="11.5" Text="Evidence is referenced and hashed in place; original files are never modified, moved or executed."/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

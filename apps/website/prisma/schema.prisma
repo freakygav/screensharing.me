@@ -1,0 +1,362 @@
+// screensharing.me — primary relational schema (PostgreSQL)
+// See ARCHITECTURE.md for the entity relationship overview.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum SessionKind {
+  WEB
+  DESKTOP
+}
+
+enum TokenPurpose {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+enum InvestigationStatus {
+  WAITING      // PIN issued, desktop not yet connected
+  CONNECTED    // desktop claimed the PIN, awaiting player consent
+  SCANNING     // consent given, scan running
+  COMPLETED
+  FAILED
+  CANCELLED
+  EXPIRED      // PIN expired before a desktop connected
+}
+
+enum ScanStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  INTERRUPTED
+}
+
+enum CategoryStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  SKIPPED
+  FAILED
+}
+
+enum Severity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  INFO
+}
+
+enum EvidenceTier {
+  CONFIRMED_ARTIFACT
+  STRONG_INDICATOR
+  SUSPICIOUS_CONFIGURATION
+  WEAK_INDICATOR
+  INCONCLUSIVE
+}
+
+enum ActorType {
+  USER
+  ADMIN
+  DEVICE
+  SYSTEM
+  ANONYMOUS
+}
+
+/// A registered account. Administrators are Users with role = ADMIN
+/// (the "Administrator" entity is modelled as a role, not a separate table,
+/// so that one authentication path and one audit trail cover everyone).
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique // stored lower-case, validated [a-z0-9_.-]
+  displayName   String
+  email         String?   @unique // stored lower-case
+  emailVerified DateTime?
+  passwordHash  String // Argon2id PHC string
+  role          Role      @default(USER)
+  disabled      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+
+  sessions       Session[]
+  tokens         EmailToken[]
+  investigations Investigation[]
+  auditLogs      AuditLog[]       @relation("AuditActor")
+  rulesUpdated   DetectionRule[]
+}
+
+model Session {
+  id         String      @id @default(cuid())
+  tokenHash  String      @unique // SHA-256 of the opaque bearer/cookie token
+  kind       SessionKind @default(WEB)
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime    @default(now())
+  expiresAt  DateTime
+  lastSeenAt DateTime    @default(now())
+  revokedAt  DateTime?
+  ip         String?
+  userAgent  String?
+
+  @@index([userId])
+}
+
+model EmailToken {
+  id        String       @id @default(cuid())
+  tokenHash String       @unique
+  purpose   TokenPurpose
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email     String?
+  createdAt DateTime     @default(now())
+  expiresAt DateTime
+  usedAt    DateTime?
+}
+
+model Investigation {
+  id            String              @id @default(cuid())
+  reference     String              @unique // human friendly, e.g. INV-7KQ2-M9XD
+  ownerId       String
+  owner         User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  subjectName   String // Minecraft username / player being investigated
+  serverName    String?
+  notes         String?
+  status        InvestigationStatus @default(WAITING)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  connectedAt   DateTime?
+  consentedAt   DateTime?
+  completedAt   DateTime?
+
+  pin     InvestigationPin?
+  devices ConnectedDevice[]
+  scan    Scan?
+  events  InvestigationEvent[]
+
+  @@index([ownerId, createdAt])
+  @@index([status])
+}
+
+/// PINs are never stored in plaintext. `lookupHash` is an HMAC-SHA256 of the
+/// digits with the server secret (used to find the PIN); `sealed` is an
+/// AES-256-GCM ciphertext so the owner can re-display it while it is pending.
+/// `sealed` is wiped when the PIN is claimed or expires.
+model InvestigationPin {
+  id              String        @id @default(cuid())
+  investigationId String        @unique
+  investigation   Investigation @relation(fields: [investigationId], references: [id], onDelete: Cascade)
+  lookupHash      String
+  sealed          String?
+  createdAt       DateTime      @default(now())
+  expiresAt       DateTime
+  claimedAt       DateTime?
+  revokedAt       DateTime?
+
+  @@index([lookupHash])
+}
+
+/// A desktop application instance bound to one investigation through a PIN.
+/// Holds a short-lived, investigation-scoped bearer token (hashed).
+model ConnectedDevice {
+  id              String        @id @default(cuid())
+  investigationId String
+  investigation   Investigation @relation(fields: [investigationId], references: [id], onDelete: Cascade)
+  tokenHash       String        @unique
+  tokenExpiresAt  DateTime
+  appVersion      String
+  osVersion       String?
+  elevated        Boolean       @default(false)
+  ip              String?
+  connectedAt     DateTime      @default(now())
+  lastHeartbeatAt DateTime      @default(now())
+  revokedAt       DateTime?
+
+  @@index([investigationId])
+}
+
+model Scan {
+  id              String        @id @default(cuid())
+  investigationId String        @unique
+  investigation   Investigation @relation(fields: [investigationId], references: [id], onDelete: Cascade)
+  status          ScanStatus    @default(PENDING)
+  progress        Int           @default(0) // 0..100, computed from completed work units
+  currentActivity String?
+  engineVersion   String
+  rulesetVersion  String
+  elevated        Boolean       @default(false)
+  startedAt       DateTime      @default(now())
+  completedAt     DateTime?
+  lastUpdateAt    DateTime      @default(now())
+  failureReason   String?
+  summary         Json?
+  coverage        Json?
+  chainOfCustody  Json?
+  manifestSha256  String? // SHA-256 the desktop computed over all findings
+  manifestVerified Boolean? // backend recomputation matched
+
+  categories ScanCategory[]
+  detections Detection[]
+}
+
+model ScanCategory {
+  id             String         @id @default(cuid())
+  scanId         String
+  scan           Scan           @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  key            String
+  name           String
+  order          Int            @default(0)
+  status         CategoryStatus @default(PENDING)
+  itemsExamined  Int            @default(0)
+  findingsCount  Int            @default(0)
+  message        String?
+  startedAt      DateTime?
+  completedAt    DateTime?
+
+  @@unique([scanId, key])
+}
+
+model Detection {
+  id                      String       @id @default(cuid())
+  scanId                  String
+  scan                    Scan         @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  clientFindingId         String // stable id from the desktop (idempotent uploads)
+  ruleId                  String
+  name                    String
+  description             String
+  category                String
+  categoryKey             String
+  severity                Severity
+  tier                    EvidenceTier
+  confidence              Int // 0..100
+  method                  String
+  whyItMatters            String
+  limitations             String
+  falsePositiveNotes      String
+  alternativeExplanations String
+  detectedAt              DateTime
+  receivedAt              DateTime     @default(now())
+
+  evidence Evidence[]
+
+  @@unique([scanId, clientFindingId])
+  @@index([scanId, severity])
+}
+
+model Evidence {
+  id             String    @id @default(cuid())
+  detectionId    String
+  detection      Detection @relation(fields: [detectionId], references: [id], onDelete: Cascade)
+  position       Int       @default(0) // order as reported by the scanner (primary evidence first)
+  kind           String // FILE, JAR_ENTRY, LOG, PREFETCH, BAM, REGISTRY, PROCESS, MODULE, MEMORY, EVENT_LOG, RECYCLE_BIN, USN, ENVIRONMENT, CONFIG
+  source         String // collector/artifact source description
+  reference      String // path / key / process reference
+  sha256         String?
+  sizeBytes      BigInt?
+  createdTime    DateTime?
+  modifiedTime   DateTime?
+  accessedTime   DateTime?
+  observedAt     DateTime
+  details        Json? // key/value excerpt (strings only)
+
+  @@index([detectionId, position])
+}
+
+model DetectionRule {
+  id                 String       @id // e.g. SSME-CL-0001
+  name               String
+  description        String
+  category           String
+  kind               String // MOD_ID, PACKAGE_PREFIX, SHA256, MEMORY_STRING, EXECUTABLE_NAME, FILE_NAME, KNOWN_MOD
+  pattern            String
+  family             String?
+  features           String[]
+  severity           Severity
+  tier               EvidenceTier
+  confidence         Int
+  classification     String? // for KNOWN_MOD: performance|cosmetic|accessibility|gameplay|utility|prohibited
+  falsePositives     String
+  limitations        String
+  references         String[]
+  enabled            Boolean      @default(true)
+  version            Int          @default(1)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  updatedById        String?
+  updatedBy          User?        @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+}
+
+model AuditLog {
+  id         String    @id @default(cuid())
+  actorType  ActorType
+  actorId    String?
+  actor      User?     @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  action     String
+  targetType String?
+  targetId   String?
+  details    Json?
+  ip         String?
+  createdAt  DateTime  @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+}
+
+model ApplicationVersion {
+  id          String   @id @default(cuid())
+  version     String   @unique
+  channel     String   @default("stable")
+  notes       String?
+  sha256      String?
+  downloadUrl String?
+  minimumSupported Boolean @default(false) // the lowest version still allowed to connect
+  active      Boolean  @default(true) // false = blocked from connecting
+  releasedAt  DateTime @default(now())
+}
+
+/// Append-only stream that powers the Server-Sent Events feed of the
+/// investigation page. Clients resume with Last-Event-ID = id.
+model InvestigationEvent {
+  id              BigInt        @id @default(autoincrement())
+  investigationId String
+  investigation   Investigation @relation(fields: [investigationId], references: [id], onDelete: Cascade)
+  type            String
+  payload         Json
+  createdAt       DateTime      @default(now())
+
+  @@index([investigationId, id])
+}
+
+model RateLimitBucket {
+  key         String   @id
+  count       Int
+  windowStart DateTime
+}
+
+model SystemConfig {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model MailOutbox {
+  id        String    @id @default(cuid())
+  to        String
+  subject   String
+  body      String
+  createdAt DateTime  @default(now())
+  sentAt    DateTime?
+  error     String?
+}

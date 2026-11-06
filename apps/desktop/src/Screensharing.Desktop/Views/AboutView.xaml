@@ -1,0 +1,41 @@
+<UserControl x:Class="Screensharing.Desktop.Views.AboutView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Screensharing.Desktop.Controls">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="40,28" MaxWidth="760" HorizontalAlignment="Left">
+            <StackPanel Orientation="Horizontal">
+                <c:Logo Width="48" Height="48"/>
+                <StackPanel Margin="16,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource H1}"><Run Text="screensharing"/><Run Text=".me" Foreground="{StaticResource Accent2}"/></TextBlock>
+                    <TextBlock Style="{StaticResource MutedText}" Text="Minecraft forensic investigation client"/>
+                </StackPanel>
+            </StackPanel>
+            <Border Style="{StaticResource Card}" Margin="0,22,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="170"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                    <TextBlock Text="Application" Foreground="{StaticResource Dim}" Margin="0,4"/><TextBlock Grid.Column="1" Text="{Binding AppVersion}" Style="{StaticResource MonoText}" Margin="0,4"/>
+                    <TextBlock Grid.Row="1" Text="Scanning engine" Foreground="{StaticResource Dim}" Margin="0,4"/><TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding EngineVersion}" Style="{StaticResource MonoText}" Margin="0,4"/>
+                    <TextBlock Grid.Row="2" Text="Built-in ruleset" Foreground="{StaticResource Dim}" Margin="0,4"/><TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource MonoText}" Margin="0,4"><Run Text="{Binding EmbeddedRuleset, Mode=OneWay}"/><Run Text=" ("/><Run Text="{Binding EmbeddedRuleCount, Mode=OneWay}"/><Run Text=" rules; the live catalog is downloaded per investigation)"/></TextBlock>
+                    <TextBlock Grid.Row="3" Text="Server" Foreground="{StaticResource Dim}" Margin="0,4"/><TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Server}" Style="{StaticResource MonoText}" Margin="0,4"/>
+                    <TextBlock Grid.Row="4" Text="Runtime" Foreground="{StaticResource Dim}" Margin="0,4"/><TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Runtime}" Style="{StaticResource MonoText}" Margin="0,4"/>
+                    <TextBlock Grid.Row="5" Text="Privileges" Foreground="{StaticResource Dim}" Margin="0,4"/><TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Elevation}" Style="{StaticResource MonoText}" Margin="0,4"/>
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                <StackPanel>
+                    <TextBlock Text="How your data is handled" Style="{StaticResource H2}" FontSize="15"/>
+                    <TextBlock Style="{StaticResource Body}" Margin="0,8,0,0" Text="Nothing is collected before you consent. The scan is read-only: files are opened with shared read access and never modified, moved, executed or deleted. Only findings, file hashes, file metadata and an inventory of Minecraft components are sent to the investigator over an authenticated connection. Browser data, passwords, launcher account tokens and personal documents are never read; session tokens on Java command lines are redacted."/>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                <StackPanel>
+                    <TextBlock Text="Limitations" Style="{StaticResource H2}" FontSize="15"/>
+                    <TextBlock Style="{StaticResource Body}" Margin="0,8,0,0" Text="Closed-source injected clients publish no identifiers and are only detectable through indirect evidence. Memory evidence exists only while the game runs. Prefetch, BAM and the change journal require administrator rights. File names never exceed the suspicious tier on their own, and an empty report does not prove the absence of modifications outside the examined scope."/>
+                </StackPanel>
+            </Border>
+            <TextBlock Style="{StaticResource MutedText}" FontSize="11.5" Margin="0,16,0,0" Text="PDF reports are generated with QuestPDF (Community License). © 2026 screensharing.me"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,72 @@
+<UserControl x:Class="Screensharing.Desktop.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="40,28" MaxWidth="760" HorizontalAlignment="Left">
+            <TextBlock Text="APPLICATION SETTINGS" Style="{StaticResource Eyebrow}"/>
+            <TextBlock Text="Settings" Style="{StaticResource H1}" Margin="0,4,0,0"/>
+            <Border Style="{StaticResource Card}" Margin="0,20,0,0">
+                <StackPanel>
+                    <TextBlock Text="Server" Style="{StaticResource H2}" FontSize="15"/>
+                    <TextBlock Style="{StaticResource MutedText}" FontSize="12.5" Margin="0,4,0,10" Text="HTTPS is required. Plain HTTP is accepted only for a local development server (localhost)."/>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBox Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}" FontFamily="{StaticResource Mono}"/>
+                        <Button Grid.Column="1" Style="{StaticResource BtnSmall}" Content="Reset" Margin="8,0,0,0" Command="{Binding ResetServerCommand}"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                <StackPanel>
+                    <TextBlock Text="Scanning" Style="{StaticResource H2}" FontSize="15"/>
+                    <CheckBox Style="{StaticResource Toggle}" IsChecked="{Binding ModrinthLookup}" Margin="0,14,0,0">
+                        <StackPanel><TextBlock Text="Verify unknown mods with Modrinth" Foreground="{StaticResource Ink}"/><TextBlock Style="{StaticResource MutedText}" FontSize="12" Text="Sends only SHA-512 hashes of unrecognised mod files to api.modrinth.com to identify published mods and reduce false positives."/></StackPanel>
+                    </CheckBox>
+                    <CheckBox Style="{StaticResource Toggle}" IsChecked="{Binding MemoryScan}" Margin="0,14,0,0">
+                        <StackPanel><TextBlock Text="Scan memory of running Minecraft processes" Foreground="{StaticResource Ink}"/><TextBlock Style="{StaticResource MutedText}" FontSize="12" Text="Read-only search for known client class paths in Java game processes."/></StackPanel>
+                    </CheckBox>
+                    <TextBlock Text="Memory scan cap per process (GB)" Foreground="{StaticResource Ink}" Margin="0,14,0,6"/>
+                    <TextBox Text="{Binding MemoryCapGb, UpdateSourceTrigger=PropertyChanged}" Width="120" HorizontalAlignment="Left"/>
+                </StackPanel>
+            </Border>
+            <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                <Button Style="{StaticResource BtnPrimary}" Content="Save settings" Command="{Binding SaveCommand}" Width="150"/>
+                <TextBlock Text="{Binding Message}" VerticalAlignment="Center" Margin="12,0,0,0" FontSize="12.5">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{StaticResource Ok}"/>
+                            <Style.Triggers><DataTrigger Binding="{Binding MessageIsError}" Value="True"><Setter Property="Foreground" Value="{StaticResource Crit}"/></DataTrigger></Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StackPanel>
+            <Border Style="{StaticResource Card}" Margin="0,20,0,0">
+                <StackPanel>
+                    <Grid>
+                        <TextBlock Text="Local scan history" Style="{StaticResource H2}" FontSize="15"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource BtnGhost}" Content="Open data folder" Command="{Binding OpenDataFolderCommand}"/>
+                            <Button Style="{StaticResource BtnGhost}" Content="Clear history" Command="{Binding ClearHistoryCommand}"/>
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock Text="{Binding DataFolder}" Style="{StaticResource MonoText}" Foreground="{StaticResource Dim}" Margin="0,4,0,10"/>
+                    <ItemsControl ItemsSource="{Binding History}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="0,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="90"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Reference}" FontFamily="{StaticResource Mono}" FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="{StaticResource Ink2}"><Run Text="{Binding Subject, Mode=OneWay}"/><Run Text=" · " Foreground="{StaticResource Dim}"/><Run Text="{Binding CompletedAt, Mode=OneWay, Converter={StaticResource LocalTime}}" Foreground="{StaticResource Dim}"/></TextBlock>
+                                        <TextBlock Grid.Column="2" VerticalAlignment="Center" Foreground="{StaticResource Muted}"><Run Text="{Binding Findings, Mode=OneWay}"/><Run Text=" findings"/></TextBlock>
+                                        <Button Grid.Column="3" Style="{StaticResource BtnGhost}" Content="Show report" Command="{Binding DataContext.OpenReportCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

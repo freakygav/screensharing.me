@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>Screensharing.Scanner</RootNamespace>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Management" Version="10.0.0" />
+    <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.0" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Offline fallback ruleset; the live catalog is downloaded from the server per investigation. -->
+    <EmbeddedResource Include="..\..\..\..\packages\detection-rules\rules.json" LogicalName="Screensharing.Scanner.rules.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Screensharing.Scanner.Tests" />
+  </ItemGroup>
+</Project>

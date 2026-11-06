@@ -1,0 +1,65 @@
+<UserControl x:Class="Screensharing.Desktop.Views.StaffDashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="32,24">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock>
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource Eyebrow}">
+                            <Setter Property="Text" Value="STAFF CONSOLE"/>
+                            <Style.Triggers><DataTrigger Binding="{Binding IsAdmin}" Value="True"><Setter Property="Text" Value="ADMINISTRATOR CONSOLE"/></DataTrigger></Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <TextBlock Style="{StaticResource H1}" Margin="0,4,0,0"><Run Text="Signed in as "/><Run Text="{Binding User.DisplayName, Mode=OneWay}"/></TextBlock>
+                <TextBlock Style="{StaticResource MutedText}" Margin="0,4,0,0" Text="Investigations are loaded from the server. Administrators see every investigation; each view of another user's report is audited."/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                <Button Style="{StaticResource BtnSmall}" Command="{Binding RefreshCommand}" Margin="0,0,8,0"><StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Icon}" Text="&#xE72C;" FontSize="11" Margin="0,0,6,0"/><TextBlock Text="Refresh"/></StackPanel></Button>
+                <Button Style="{StaticResource BtnSmall}" Command="{Binding SignOutCommand}" Content="Sign out"/>
+            </StackPanel>
+        </Grid>
+        <UniformGrid Grid.Row="1" Columns="4" Margin="0,18,0,0">
+            <Border Style="{StaticResource Card}" Margin="0,0,10,0" Padding="16,12"><StackPanel><TextBlock Text="Investigations" Foreground="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding Total}" FontSize="24" FontWeight="Bold"/></StackPanel></Border>
+            <Border Style="{StaticResource Card}" Margin="0,0,10,0" Padding="16,12"><StackPanel><TextBlock Text="Active" Foreground="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding Active}" FontSize="24" FontWeight="Bold"/></StackPanel></Border>
+            <Border Style="{StaticResource Card}" Margin="0,0,10,0" Padding="16,12"><StackPanel><TextBlock Text="Completed" Foreground="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding Completed}" FontSize="24" FontWeight="Bold"/></StackPanel></Border>
+            <Border Style="{StaticResource Card}" Padding="16,12"><StackPanel><TextBlock Text="Findings recorded" Foreground="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding FindingsTotal}" FontSize="24" FontWeight="Bold"/></StackPanel></Border>
+        </UniformGrid>
+        <Grid Grid.Row="2" Margin="0,16,0,10">
+            <TextBox Text="{Binding Filter, UpdateSourceTrigger=PropertyChanged}" Height="34" Width="320" HorizontalAlignment="Left"/>
+            <TextBlock Text="{Binding Error}" Foreground="{StaticResource Crit}" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="{Binding Error, Converter={StaticResource NullToVis}}"/>
+        </Grid>
+        <Border Grid.Row="3" Style="{StaticResource Card}" Padding="0">
+            <Grid>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition/></Grid.RowDefinitions>
+                <Grid Margin="18,11" TextElement.FontSize="11" TextElement.Foreground="{StaticResource Dim}">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition/><ColumnDefinition Width="130"/><ColumnDefinition Width="110"/><ColumnDefinition Width="80"/><ColumnDefinition Width="150"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="REFERENCE"/><TextBlock Grid.Column="1" Text="PLAYER"/><TextBlock Grid.Column="2" Text="INVESTIGATOR"/><TextBlock Grid.Column="3" Text="STATUS"/><TextBlock Grid.Column="4" Text="FINDINGS"/><TextBlock Grid.Column="5" Text="CREATED"/>
+                </Grid>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Investigations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="18,10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition/><ColumnDefinition Width="130"/><ColumnDefinition Width="110"/><ColumnDefinition Width="80"/><ColumnDefinition Width="150"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Reference}" FontFamily="{StaticResource Mono}" FontSize="12" Foreground="{StaticResource Ink}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding SubjectName}" Foreground="{StaticResource Ink}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Owner}" Foreground="{StaticResource Ink2}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding Status}" FontSize="11.5" FontWeight="SemiBold" Foreground="{Binding Status, Converter={StaticResource Tone}}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="4" Text="{Binding Findings}" Foreground="{StaticResource Ink2}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="5" Text="{Binding CreatedAt, Converter={StaticResource LocalTime}}" Foreground="{StaticResource Dim}" FontSize="12" VerticalAlignment="Center"/>
+                                        <Button Grid.Column="6" Style="{StaticResource BtnSmall}" Content="Report" Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,70 @@
+<UserControl x:Class="Screensharing.Desktop.Views.ScanView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="40,30" MaxWidth="980">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <StackPanel HorizontalAlignment="Center">
+            <TextBlock Text="SCREENSHARING.ME" Style="{StaticResource Eyebrow}" HorizontalAlignment="Center"/>
+            <TextBlock Text="INVESTIGATION IN PROGRESS" Style="{StaticResource H1}" FontSize="24" HorizontalAlignment="Center" Margin="0,6,0,0"/>
+            <TextBlock Style="{StaticResource MutedText}" HorizontalAlignment="Center" Margin="0,4,0,0">
+                <Run Text="{Binding Investigation.Reference, Mode=OneWay}" FontFamily="{StaticResource Mono}"/><Run Text=" · requested by "/><Run Text="{Binding Investigation.RequestedBy, Mode=OneWay}"/>
+            </TextBlock>
+        </StackPanel>
+
+        <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,24,0,0" Padding="26,22">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Activity}" FontSize="15" Foreground="{StaticResource Ink}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding Units}" FontSize="12" Foreground="{StaticResource Dim}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" FontSize="40" FontWeight="Bold" FontFamily="{StaticResource Display}" Foreground="{StaticResource Ink}">
+                        <Run Text="{Binding Percent, Mode=OneWay}"/><Run Text="%" FontSize="22" Foreground="{StaticResource Muted}"/>
+                    </TextBlock>
+                </Grid>
+                <ProgressBar Style="{StaticResource Progress}" Value="{Binding Percent, Mode=OneWay}" Maximum="100" Margin="0,16,0,0" Height="10"/>
+                <Grid Margin="0,18,0,0">
+                    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
+                    <StackPanel><TextBlock Text="Findings" Foreground="{StaticResource Dim}" FontSize="12"/><TextBlock Text="{Binding Findings}" FontSize="20" FontWeight="Bold"/></StackPanel>
+                    <StackPanel Grid.Column="1"><TextBlock Text="Critical" Foreground="{StaticResource Dim}" FontSize="12"/><TextBlock Text="{Binding Critical}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Crit}"/></StackPanel>
+                    <StackPanel Grid.Column="2"><TextBlock Text="High" Foreground="{StaticResource Dim}" FontSize="12"/><TextBlock Text="{Binding High}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource High}"/></StackPanel>
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Ellipse Width="8" Height="8" Fill="{Binding LinkState, Converter={StaticResource Tone}}" Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding LinkText}" Foreground="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" MaxWidth="320"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="2" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Categories}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="2"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Inset}" Margin="0,0,10,10" Padding="14,11">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource Icon}" Text="{Binding Status, Converter={StaticResource StatusGlyph}}" Foreground="{Binding Status, Converter={StaticResource Tone}}" FontSize="13"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding Name}" FontSize="13" Foreground="{StaticResource Ink}"/>
+                                    <TextBlock Text="{Binding Detail}" FontSize="11.5" Foreground="{StaticResource Dim}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <Grid Grid.Row="3" Margin="0,8,0,0">
+            <Border CornerRadius="10" Padding="12,9" Background="{StaticResource CritSoft}" BorderBrush="#59FF4D6A" BorderThickness="1" HorizontalAlignment="Left" Visibility="{Binding Error, Converter={StaticResource NullToVis}}">
+                <TextBlock Text="{Binding Error}" Foreground="#FFD4DC" FontSize="12.5" TextWrapping="Wrap"/>
+            </Border>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Style="{StaticResource BtnSmall}" Content="Cancel investigation" Command="{Binding CancelCommand}" Visibility="{Binding Running, Converter={StaticResource BoolToVis}}"/>
+                <Button Style="{StaticResource BtnSmall}" Content="Close" Command="{Binding CloseCommand}" Visibility="{Binding Running, Converter={StaticResource NotBoolToVis}}"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>
